@@ -1,10 +1,9 @@
-# TODO! check if the freezer content doesn't have anything and quit.
 set -e
 cat ~/.freezer.config
 source ~/.freezer.config
 if [ "$#" -ne 2 ]; then
     echo usage: $0 pubkey albumID
-    echo looks up albumID and encrypts for pubkey
+    echo looks up albumID in the cache and encrypts for given pubkey
     exit
 fi
 fname=$( grep $2 ~/.freezer.content | awk '{print $2}' )

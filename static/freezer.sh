@@ -27,4 +27,10 @@ if [ "$#" -eq 0 ]; then
 	echo usage:	$0 list: show content available
 	exit
 fi
-$GPG --decrypt "/home/rk/Dropbox/Albums/$1.$2.zip.gpg" > "$1.$2"
+if [ $1 = "list" ]; then
+	if [ ! -d "content" ]; then
+		echo "No content dir found; freezer needs to be run from the static share dir"
+		exit -1
+	fi
+	cat ./content/contents.txt
+fi
