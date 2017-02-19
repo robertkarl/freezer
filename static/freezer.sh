@@ -22,15 +22,28 @@ then
 	echo Setup succeeded. 
 	exit
 fi
+source ~/.freezer.config
 
 if [ "$#" -eq 0 ]; then
 	echo usage:	$0 list: show content available
 	exit
 fi
+
 if [ $1 = "list" ]; then
 	if [ ! -d "content" ]; then
 		echo "No content dir found; freezer needs to be run from the static share dir"
 		exit -1
 	fi
 	cat ./content/contents.txt
+fi
+
+if [ $1 = "thaw" ]; then
+	if [ "$#" -ne 3 ]; then
+		echo "usage: $0 thaw pubkey albumID"
+		echo "please run from the freezer static dir"
+		exit -1
+	fi
+	pubkey=$2
+	albumID=$3
+	$FRZR_GPG --decrypt "./content/$pubkey.$albumID.zip.gpg" > "$FRZR_DOWNLOAD/$2.zip"
 fi
