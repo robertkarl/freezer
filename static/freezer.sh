@@ -39,12 +39,19 @@ if [ $1 = "list" ]; then
 fi
 
 if [ $1 = "thaw" ]; then
+	set -e
 	if [ "$#" -ne 3 ]; then
 		echo "usage: $0 thaw pubkey albumID"
 		echo "please run from the freezer static dir"
 		exit -1
 	fi
+	echo starting thaw
 	pubkey=$2
 	albumID=$3
-	$FRZR_GPG --decrypt "./content/$pubkey.$albumID.zip.gpg" > "$FRZR_DOWNLOAD/$2.zip"
+	content_path="`pwd`/content"
+	$FRZR_GPG --decrypt "$content_path/$pubkey.$albumID.zip.gpg" > "$FRZR_DOWNLOAD/$albumID.zip"
+	exit 0
 fi
+
+echo freezer command \'$1\' not recognized
+exit -1
