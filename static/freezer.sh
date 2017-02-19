@@ -49,7 +49,9 @@ if [ $1 = "thaw" ]; then
 	pubkey=$2
 	albumID=$3
 	content_path="`pwd`/content"
-	$FRZR_GPG --decrypt "$content_path/$pubkey.$albumID.zip.gpg" > "$FRZR_DOWNLOAD/$albumID.zip"
+	output_file="$FRZR_DOWNLOAD/$albumID.zip"
+	$FRZR_GPG --decrypt "$content_path/$pubkey.$albumID.zip.gpg" > $output_file
+	echo exported requested content to $output_file
 	exit 0
 fi
 
