@@ -1,3 +1,4 @@
+# TODO! check if the freezer content doesn't have anything and quit.
 set -e
 cat ~/.freezer.config
 source ~/.freezer.config
@@ -7,6 +8,10 @@ if [ "$#" -ne 2 ]; then
     exit
 fi
 fname=$( grep $2 ~/.freezer.content | awk '{print $2}' )
+if [ -z "$fname" ]; then
+	echo "no cached content for album $2; please try freezer-preparing it."
+	exit
+fi
 echo Content with ID $2 exists unencrypted at $fname
 outputname="$FRZR_EXPORT_FOLDER/$1.$2.zip.gpg"
 echo exporting file to $outputname
