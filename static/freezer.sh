@@ -26,6 +26,7 @@ source ~/.freezer.config
 
 if [ "$#" -eq 0 ]; then
 	echo usage:	$0 list: show content available
+	echo usage:	$0 thaw pubkey albumID
 	exit
 fi
 
@@ -34,7 +35,7 @@ if [ $1 = "list" ]; then
 		echo "No content dir found; freezer needs to be run from the static share dir"
 		exit -1
 	fi
-	cat ./content/contents.txt
+	cat ./contents.txt
 fi
 
 if [ $1 = "thaw" ]; then
