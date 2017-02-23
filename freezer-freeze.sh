@@ -1,17 +1,24 @@
 set -e
-echo Importing freezer config.
 source ~/.freezer.config
+
 if [ "$#" -ne 2 ]; then
-    echo usage: $0 pubkey albumID
-    echo looks up albumID in the cache and encrypts for given pubkey
-    exit
-fi
-fname=$( grep $2 ~/.freezer.content | awk '{print $2}' )
-if [ -z "$fname" ]; then
-	echo "no cached content for album $2; please try freezer-preparing it."
+	echo usage: $0 albumID folder
+	echo adds encrypted version of stuff in \"folder\" to directory indicated in ~/.freezer.config
 	exit
 fi
-echo Found matching unencrypted file at $fname
-outputname="$FRZR_EXPORT_FOLDER/$1.$2.zip.gpg"
-echo Exporting encrypted version to $outputname
-$FRZR_GPG --batch --yes --output $outputname --encrypt --recipient $1 $fname
+if [ -z $FRZR_CACHE ]; then
+	echo please add a FRZR_CACHE variable where unencrypted content can be stored
+	exit -1
+fi
+
+ALBUMID=$1
+ALBUM_CONTENT=$2
+outfile="$FRZR_CACHE/$ALBUMID.zip"
+
+printf 'Caching.\tDestination %s\n' "$FRZR_CACHE"
+
+zip -rq $outfile "$ALBUM_CONTENT"
+fname=$FRZR_CACHE/$1.zip
+outputname="$FRZR_EXPORT_FOLDER/$FRZR_PUBKEY.$ALBUMID.zip.gpg"
+printf 'Encrypting.\tDestination %s\n' $FRZR_EXPORT_FOLDER
+$FRZR_GPG --batch --yes --output $outputname --encrypt --recipient $FRZR_PUBKEY $fname
