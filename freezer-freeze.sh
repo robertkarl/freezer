@@ -15,10 +15,9 @@ ALBUMID=$1
 ALBUM_CONTENT=$2
 outfile="$FRZR_CACHE/$ALBUMID.zip"
 
-printf 'Caching.\tDestination %s\n' "$FRZR_CACHE"
-
 zip -rq $outfile "$ALBUM_CONTENT"
 fname=$FRZR_CACHE/$1.zip
 outputname="$FRZR_EXPORT_FOLDER/$FRZR_PUBKEY.$ALBUMID.zip.gpg"
-printf 'Encrypting.\tDestination %s\n' $FRZR_EXPORT_FOLDER
 $FRZR_GPG --batch --yes --output $outputname --encrypt --recipient $FRZR_PUBKEY $fname
+printf '%s\n' "$outputname"
+
