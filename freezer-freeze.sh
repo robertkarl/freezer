@@ -1,5 +1,5 @@
 set -e
-cat ~/.freezer.config
+echo Importing freezer config.
 source ~/.freezer.config
 if [ "$#" -ne 2 ]; then
     echo usage: $0 pubkey albumID
@@ -11,7 +11,7 @@ if [ -z "$fname" ]; then
 	echo "no cached content for album $2; please try freezer-preparing it."
 	exit
 fi
-echo Content with ID $2 exists unencrypted at $fname
+echo Found matching unencrypted file at $fname
 outputname="$FRZR_EXPORT_FOLDER/$1.$2.zip.gpg"
-echo exporting file to $outputname
+echo Exporting encrypted version to $outputname
 $FRZR_GPG --batch --yes --output $outputname --encrypt --recipient $1 $fname
