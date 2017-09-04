@@ -36,6 +36,7 @@ if [ $1 = "list" ]; then
 		exit -1
 	fi
 	cat ./contents.txt
+  exit 0
 fi
 
 if [ $1 = "thaw" ]; then
