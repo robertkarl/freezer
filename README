@@ -1,1 +1,5 @@
 Shell scripts to share encrypted content between computers
+
+
+install into your ~/Dropbox folder with ./deploy-freezer.sh. or Fuck off.
+If you did not fuck off above, proceed to `cd ~/Dropbox/Freezer`
