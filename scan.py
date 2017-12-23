@@ -17,10 +17,9 @@ def process_many(filenames):
 def process_one(fname, answer):
     try:
         tag = eyed3.load(fname).tag
-        components = os.path.dirname(fname).split("/")
         artist = tag.artist if tag.artist is not None else "Unknown Artist"
         album = tag.album if tag.album is not None else "Unknown Album"
-        answer.add((artist, album, fname))
+        answer.add((artist, album, os.path.dirname(fname)))
     except AttributeError:
         pass
 
@@ -30,13 +29,14 @@ def partition(inputs, num_buckets):
         buckets[index % num_buckets].append(value)
     return buckets
 
-def collect_fnames(path):
+def collect_fnames(paths_to_search):
     paths = []
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            path = os.path.join(root, file)
-            if path[-3:] == "mp3":
-                paths.append(path)
+    for input_dir in paths_to_search:
+        for root, dirs, files in os.walk(input_dir):
+            for file in files:
+                path = os.path.join(root, file)
+                if path[-3:] == "mp3":
+                    paths.append(path)
     return paths
 
 def print_all_columns(sorted_albums):
@@ -56,17 +56,18 @@ def print_all_columns(sorted_albums):
         print(prefix.format(artist, album, path))
 
 def print_albums(sorted_albums):
-    albums = sorted(set([i[1] for i in sorted_albums]))
-    for album_name in albums: 
-        print(album_name)
+    albums = sorted(set([(i[1], i[2])for i in sorted_albums]))
+    for album_name, path in albums: 
+        print("{}\t{}".format(album_name, path))
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_threads", type=int, default=multiprocessing.cpu_count())
-    parser.add_argument("--path", type=str)
+    parser.add_argument("--paths", type=str, nargs='+', required=True)
     parser.add_argument("--column", type=str)
     args = parser.parse_args()
-    partitioned_stuff = [[i] for i in partition(collect_fnames(args.path), args.num_threads)]
+    print(args.paths)
+    partitioned_stuff = [[i] for i in partition(collect_fnames(args.paths), args.num_threads)]
     outputs = [[] for i in range(args.num_threads)]
     with multiprocessing.Pool(processes=args.num_threads) as pool:                                                                   
         result = pool.starmap(process_many, partitioned_stuff)
