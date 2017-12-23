@@ -39,10 +39,32 @@ def collect_fnames(path):
                 paths.append(path)
     return paths
 
+def print_all_columns(sorted_albums):
+    numcolumns = len(sorted_albums[0])
+    column_limits = [0 for i in range(numcolumns)]
+    for infotuple in sorted_albums:
+        for index, value in enumerate(infotuple):
+            if len(value) > column_limits[index]:
+                column_limits[index] = len(value)
+    prefix = ""
+    for limit in column_limits[:-1]:
+        prefix += "{:<"
+        prefix += str(limit)
+        prefix += "}\t"
+    prefix += "{}"
+    for artist, album, path in sorted_albums:
+        print(prefix.format(artist, album, path))
+
+def print_albums(sorted_albums):
+    albums = sorted(set([i[1] for i in sorted_albums]))
+    for album_name in albums: 
+        print(album_name)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_threads", type=int, default=multiprocessing.cpu_count())
     parser.add_argument("--path", type=str)
+    parser.add_argument("--column", type=str)
     args = parser.parse_args()
     partitioned_stuff = [[i] for i in partition(collect_fnames(args.path), args.num_threads)]
     outputs = [[] for i in range(args.num_threads)]
@@ -52,19 +74,9 @@ def main():
         for albumset in result[1:]:
             finaleresult = finalresult.union(albumset)
         sorted_albums = sorted(list(finalresult))
-        numcolumns = len(sorted_albums[0])
-        column_limits = [0 for i in range(numcolumns)]
-        for infotuple in sorted_albums:
-            for index, value in enumerate(infotuple):
-                if len(value) > column_limits[index]:
-                    column_limits[index] = len(value)
-        prefix = ""
-        for limit in column_limits[:-1]:
-            prefix += "{:<"
-            prefix += str(limit)
-            prefix += "}\t"
-        prefix += "{}"
-        for artist, album, path in sorted_albums:
-            print(prefix.format(artist, album, path))
+        if args.column == "album":
+            print_albums(sorted_albums)
+        else:
+            print_all_columns(sorted_albums)
 if __name__ == "__main__":
     main()
