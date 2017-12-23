@@ -1,0 +1,66 @@
+#! /usr/bin/env python3
+import argparse
+import os
+import scan
+
+FREEZER_DIR=os.path.expanduser("~/.freezer")
+FREEZER_PATHS_FILENAME=os.path.join(FREEZER_DIR, "paths.txt")
+FREEZER_INDEX_PATH=os.path.join(FREEZER_DIR, "index.txt")
+
+def init_workspace():
+    os.makedirs(FREEZER_DIR, exist_ok=True)
+
+def add_indexed_path(paths):
+    contents = []
+    if os.path.exists(FREEZER_PATHS_FILENAME):
+        with open(FREEZER_PATHS_FILENAME, 'r') as paths_file:
+            contents = [i.strip() for i in paths_file.readlines()]
+    for path_to_add in paths:
+        contents.append(path_to_add)
+    contents = list(set(contents))
+    contents = sorted(contents)
+    for line in contents:
+        print(line)
+    with open(os.path.join(FREEZER_DIR,FREEZER_PATHS_FILENAME), 'w') as paths_file:
+        for line in contents:
+            paths_file.write(line)
+            paths_file.write('\n')
+
+def get_freezer_indexed_paths():
+    with open(os.path.join(FREEZER_DIR,FREEZER_PATHS_FILENAME), 'r') as freezer_paths_file:
+        lines = freezer_paths_file.readlines()
+    return [i.strip() for i in lines]
+
+def save_scan_results(scanresult):
+    results = sorted(scanresult, key=lambda s: s[0].lower())
+    with open(FREEZER_INDEX_PATH, 'w') as index_file:
+        for line in results:
+            index_file.write("\t".join(line))
+            index_file.write("\n")
+
+def show_index():
+    with open(FREEZER_INDEX_PATH, 'r') as index_file:
+        for line in index_file.readlines():
+            print(line.strip())
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--add", nargs='+')
+    parser.add_argument("--init", action="store_true")
+    parser.add_argument("--scan", action="store_true")
+    parser.add_argument("--list", action="store_true")
+    args = parser.parse_args()
+    if args.init:
+        init_workspace()
+    elif args.scan:
+        result = scan.perform_scan(get_freezer_indexed_paths(), 8)
+        save_scan_results(result)
+    elif args.list:
+        show_index()
+    elif args.add:
+        add_indexed_path(args.add)
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()

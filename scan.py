@@ -60,6 +60,18 @@ def print_albums(sorted_albums):
     for album_name, path in albums: 
         print("{}\t{}".format(album_name, path))
 
+def perform_scan(paths_to_search, num_threads):
+    partitioned_stuff = [[i] for i in partition(collect_fnames(paths_to_search), num_threads)]
+    outputs = [[] for i in range(num_threads)]
+    with multiprocessing.Pool(processes=num_threads) as pool:                                                                   
+        result = pool.starmap(process_many, partitioned_stuff)
+        finalresult = result[0]
+        for albumset in result[1:]:
+            finaleresult = finalresult.union(albumset)
+        sorted_albums = sorted(list(finalresult))
+        return sorted_albums
+    
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_threads", type=int, default=multiprocessing.cpu_count())
@@ -67,17 +79,11 @@ def main():
     parser.add_argument("--column", type=str)
     args = parser.parse_args()
     print(args.paths)
-    partitioned_stuff = [[i] for i in partition(collect_fnames(args.paths), args.num_threads)]
-    outputs = [[] for i in range(args.num_threads)]
-    with multiprocessing.Pool(processes=args.num_threads) as pool:                                                                   
-        result = pool.starmap(process_many, partitioned_stuff)
-        finalresult = result[0]
-        for albumset in result[1:]:
-            finaleresult = finalresult.union(albumset)
-        sorted_albums = sorted(list(finalresult))
-        if args.column == "album":
-            print_albums(sorted_albums)
-        else:
-            print_all_columns(sorted_albums)
+    if args.column == "album":
+        print_albums(sorted_albums)
+    else:
+        print_all_columns(sorted_albums)
+
 if __name__ == "__main__":
     main()
+
