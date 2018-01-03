@@ -3,6 +3,7 @@ import argparse
 import os
 import scan
 import xmlrpc.server
+from zipfile import ZipFile
 import xmlrpc.client
 
 FREEZER_DIR=os.path.expanduser("~/.freezer")
@@ -40,6 +41,10 @@ def save_scan_results(scanresult):
             index_file.write("\t".join(line))
             index_file.write("\n")
 
+def index_generator():
+    f = open(FREEZER_INDEX_PATH, 'r')
+    return f.readlines()
+
 def read_full_index():
     with open(FREEZER_INDEX_PATH, 'r') as index_file:
         return ''.join(index_file.readlines())
@@ -60,7 +65,6 @@ def search(query):
     result = ''
     with open(FREEZER_INDEX_PATH, 'r') as index_file:
         for line in index_file.readlines():
-            print(line.count(query))
             if line.lower().count(query.lower()) > 0:
                 result += (line)
     return result
@@ -68,6 +72,26 @@ def search(query):
 def remote_search(query, host):
     a = xmlrpc.client.ServerProxy(host)
     return a.search(query)
+
+def zip_album(album_name, output_dir):
+    assert(type(output_dir) is str)
+    album_path = None
+    for line in index_generator():
+        if line.count(album_name):
+            album_path = line.split('\t')[-1]
+            print("found it at {}".format(album_path))
+            break
+    outfilename = os.path.join(output_dir, album_name + '.zip')
+    zf = ZipFile(outfilename, 'x')
+    print("walking {}".format(album_path))
+    for root, dirs, files in os.walk(album_path.strip()):
+        print("found some stuff")
+        for filename in files:
+            print("sending file {} to zipfile".format(filename))
+            song_path = os.path.join(root, filename)
+            zip_output_path = os.path.join(album_name, os.path.basename(song_path))
+            zf.write(song_path, arcname=zip_output_path)
+    zf.close()
 
 def main():
     parser = argparse.ArgumentParser()
@@ -80,6 +104,8 @@ def main():
     parser.add_argument("--remote_list", type=str, help="List the content at the address given")
     parser.add_argument("--remote_search", type=str, help="List the content at the address given")
     parser.add_argument("--serve", action="store_true", help="Serve a Python XML RPC server on port 8000")
+    parser.add_argument("--zip_album", type=str)
+    parser.add_argument("--output_dir", type=str)
     args = parser.parse_args()
     if args.init:
         init_workspace()
@@ -93,7 +119,9 @@ def main():
     elif args.serve:
         serve_forever()
     elif args.search:
-        search(args.search, args.freezer_host)
+        print(search(args.search))
+    elif args.zip_album:
+        print(zip_album(args.zip_album, args.output_dir))
     elif args.add:
         add_indexed_path(args.add)
     else:

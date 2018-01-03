@@ -64,7 +64,7 @@ def perform_scan(paths_to_search, num_threads):
     all_fnames = collect_fnames(paths_to_search)
     partitioned_stuff = [[i] for i in partition(all_fnames, num_threads)]
     outputs = [[] for i in range(num_threads)]
-    print("Starting scan...")
+    print("Starting scan with {} threads...".format(num_threads))
     with multiprocessing.Pool(processes=num_threads) as pool:                                                                   
         result = pool.starmap(process_many, partitioned_stuff)
         finalresult = result[0]
