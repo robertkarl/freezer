@@ -54,7 +54,13 @@ def serve_forever():
     server = xmlrpc.server.SimpleXMLRPCServer(addr)
     print("serving on", addr)
     server.register_function(read_full_index)
+    server.register_function(zip_album)
+    server.register_function(search)
     server.serve_forever()
+
+def get_proxy(addr):
+    proxy = xmlrpc.client.ServerProxy(addr)
+    return proxy
 
 def remote_list(ip_addr_str):
     assert(type(ip_addr_str) is str)
@@ -73,7 +79,7 @@ def remote_search(query, host):
     a = xmlrpc.client.ServerProxy(host)
     return a.search(query)
 
-def zip_album(album_name, output_dir):
+def zip_album(album_name, output_dir="/tmp/freezer"):
     assert(type(output_dir) is str)
     album_path = None
     for line in index_generator():
@@ -91,7 +97,7 @@ def zip_album(album_name, output_dir):
             zf.write(song_path, arcname=zip_output_path)
     zf.close()
     with open(outfilename, 'rb') as zipbytes:
-        return zipbytes
+        return zipbytes.read()
 
 def main():
     parser = argparse.ArgumentParser()
