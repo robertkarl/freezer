@@ -2,6 +2,8 @@
 import argparse
 import os
 import scan
+import xmlrpc.server
+import xmlrpc.client
 
 FREEZER_DIR=os.path.expanduser("~/.freezer")
 FREEZER_PATHS_FILENAME=os.path.join(FREEZER_DIR, "paths.txt")
@@ -38,25 +40,42 @@ def save_scan_results(scanresult):
             index_file.write("\t".join(line))
             index_file.write("\n")
 
-def show_index():
+def read_full_index():
     with open(FREEZER_INDEX_PATH, 'r') as index_file:
-        for line in index_file.readlines():
-            print(line.strip())
+        return ''.join(index_file.readlines())
+
+def serve_forever():
+    addr = ("127.0.0.1", 8000)
+    server = xmlrpc.server.SimpleXMLRPCServer(addr)
+    print("serving on", addr)
+    server.register_function(read_full_index)
+    server.serve_forever()
+
+def remote_list(ip_addr_str):
+    assert(type(ip_addr_str) is str)
+    a = xmlrpc.client.ServerProxy(ip_addr_str)
+    return a.read_full_index()
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--add", nargs='+')
     parser.add_argument("--init", action="store_true")
     parser.add_argument("--scan", action="store_true")
-    parser.add_argument("--list", action="store_true")
+    parser.add_argument("--local_list", action="store_true", help="List known local content")
+    parser.add_argument("--remote_list", type=str, help="List the content at the address given")
+    parser.add_argument("--serve", action="store_true", help="Serve a Python XML RPC server on port 8000")
     args = parser.parse_args()
     if args.init:
         init_workspace()
     elif args.scan:
         result = scan.perform_scan(get_freezer_indexed_paths(), 8)
         save_scan_results(result)
-    elif args.list:
-        show_index()
+    elif args.local_list:
+        print(read_full_index())
+    elif args.remote_list:
+        print(remote_list(args.remote_list))
+    elif args.serve:
+        serve_forever()
     elif args.add:
         add_indexed_path(args.add)
     else:
