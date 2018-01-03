@@ -79,19 +79,19 @@ def zip_album(album_name, output_dir):
     for line in index_generator():
         if line.count(album_name):
             album_path = line.split('\t')[-1]
-            print("found it at {}".format(album_path))
+            print("found it at {}".format(album_path.strip()))
             break
     outfilename = os.path.join(output_dir, album_name + '.zip')
     zf = ZipFile(outfilename, 'x')
-    print("walking {}".format(album_path))
     for root, dirs, files in os.walk(album_path.strip()):
-        print("found some stuff")
         for filename in files:
-            print("sending file {} to zipfile".format(filename))
+            print("sending file {}".format(filename))
             song_path = os.path.join(root, filename)
             zip_output_path = os.path.join(album_name, os.path.basename(song_path))
             zf.write(song_path, arcname=zip_output_path)
     zf.close()
+    with open(outfilename, 'rb') as zipbytes:
+        return zipbytes
 
 def main():
     parser = argparse.ArgumentParser()
@@ -121,11 +121,10 @@ def main():
     elif args.search:
         print(search(args.search))
     elif args.zip_album:
-        print(zip_album(args.zip_album, args.output_dir))
+        zip_album(args.zip_album, args.output_dir)
     elif args.add:
         add_indexed_path(args.add)
     else:
         parser.print_help()
-
 if __name__ == "__main__":
     main()
