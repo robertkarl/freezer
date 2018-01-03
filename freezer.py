@@ -56,13 +56,29 @@ def remote_list(ip_addr_str):
     a = xmlrpc.client.ServerProxy(ip_addr_str)
     return a.read_full_index()
 
+def search(query):
+    result = ''
+    with open(FREEZER_INDEX_PATH, 'r') as index_file:
+        for line in index_file.readlines():
+            print(line.count(query))
+            if line.lower().count(query.lower()) > 0:
+                result += (line)
+    return result
+
+def remote_search(query, host):
+    a = xmlrpc.client.ServerProxy(host)
+    return a.search(query)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--add", nargs='+')
     parser.add_argument("--init", action="store_true")
     parser.add_argument("--scan", action="store_true")
     parser.add_argument("--local_list", action="store_true", help="List known local content")
+    parser.add_argument("--search", type=str, help="search for stuff on a given freezer instance")
+    parser.add_argument("--freezer_host", type=str, default='http://localhost:8000')
     parser.add_argument("--remote_list", type=str, help="List the content at the address given")
+    parser.add_argument("--remote_search", type=str, help="List the content at the address given")
     parser.add_argument("--serve", action="store_true", help="Serve a Python XML RPC server on port 8000")
     args = parser.parse_args()
     if args.init:
@@ -76,6 +92,8 @@ def main():
         print(remote_list(args.remote_list))
     elif args.serve:
         serve_forever()
+    elif args.search:
+        search(args.search, args.freezer_host)
     elif args.add:
         add_indexed_path(args.add)
     else:
