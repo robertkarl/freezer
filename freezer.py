@@ -66,6 +66,16 @@ def read_artists():
     c = conn.cursor()
     return c.execute("select distinct artist from album")
 
+def read_albums():
+    conn = db.get_connection()
+    c = conn.cursor()
+    return c.execute("select distinct album, artist from album order by artist COLLATE NOCASE")
+
+def read_all():
+    conn = db.get_connection()
+    c = conn.cursor()
+    return c.execute("select * from album order by artist COLLATE NOCASE")
+
 def serve_forever():
     addr = ("127.0.0.1", 8000)
     server = xmlrpc.server.SimpleXMLRPCServer(addr)
@@ -149,6 +159,14 @@ def main():
         action="store_true",
         )
     parser.add_argument(
+        "--show_albums",
+        action="store_true",
+        )
+    parser.add_argument(
+        "--show_locations",
+        action="store_true",
+        )
+    parser.add_argument(
         "--serve",
         action="store_true",
         help="Serve a Python XML RPC server on port 8000")
@@ -165,6 +183,12 @@ def main():
     elif args.show_artists:
         for i in read_artists():
             print(i[0])
+    elif args.show_albums:
+        for i in read_albums():
+            print("{:43}{}".format(i[1], i[0]))
+    elif args.show_locations:
+        for i in read_all():
+            print("{}\t{}\t{}".format(i[1], i[0], i[2]))
     elif args.remote_list:
         print(remote_list(args.remote_list))
     elif args.serve:
