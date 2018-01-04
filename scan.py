@@ -73,7 +73,7 @@ def print_albums(sorted_albums):
 def perform_scan(paths_to_search, num_threads):
     start = time.time()
     all_fnames, mp3s_size = collect_fnames(paths_to_search)
-    print("found {0:.0f} MB of mp3s".format(float(mp3s_size) / (1024 * 1024)))
+    print("found {0:.0f} GB of mp3s".format(float(mp3s_size) / (1024 * 1024 * 1024)))
     partitioned_stuff = [[i] for i in partition(all_fnames, num_threads)]
     outputs = [[] for i in range(num_threads)]
     print("Starting scan with {} threads...".format(num_threads))

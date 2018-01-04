@@ -28,12 +28,13 @@ def init_workspace():
     db = freezerdb.FreezerDB()
     db.init_db()
 
-def add_indexed_path(path):
+def add_indexed_path(paths):
     contents = []
     if os.path.exists(FREEZER_PATHS_FILENAME):
         with open(FREEZER_PATHS_FILENAME, 'r') as paths_file:
             contents = [i.strip() for i in paths_file.readlines()]
-    contents.append(path)
+    for one_path in paths:
+        contents.append(one_path)
     contents = list(set(contents))
     contents = sorted(contents)
     for line in contents:
@@ -145,7 +146,7 @@ def get_args():
     subparsers = parser.add_subparsers(dest='command')
 
     add = subparsers.add_parser('add')
-    add.add_argument("filename", type=str)
+    add.add_argument("filenames", type=str, nargs='+')
 
     show = subparsers.add_parser('show')
     show.add_argument(
@@ -178,7 +179,6 @@ def get_args():
 def main():
     parser = get_args()
     args = parser.parse_args()
-    print(args)
     if args.command == "init":
         init_workspace()
     elif args.command == "scan":
@@ -203,7 +203,7 @@ def main():
     elif args.command == "zip":
         zip_album(args.album_to_zip, args.output_dir)
     elif args.command == "add":
-        add_indexed_path(args.filename)
+        add_indexed_path(args.filenames)
     elif args.command == "search":
         for i in search(args.query):
             print("{:33}{:43}{}".format(i[0], i[1], i[2]))
