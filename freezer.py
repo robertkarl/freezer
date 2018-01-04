@@ -8,7 +8,8 @@ import xmlrpc.server
 from zipfile import ZipFile
 
 import scan
-import db
+import freezerdb
+from freezerdb import FreezerDB
 
 FREEZER_DIR = os.path.expanduser("~/.freezer")
 FREEZER_PATHS_FILENAME = os.path.join(FREEZER_DIR, "paths.txt")
@@ -17,8 +18,8 @@ FREEZER_INDEX_PATH = os.path.join(FREEZER_DIR, "index.txt")
 
 def init_workspace():
     os.makedirs(FREEZER_DIR, exist_ok=True)
+    db = freezerdb.FreezerDB()
     db.init_db()
-
 
 def add_indexed_path(path):
     contents = []
@@ -45,39 +46,36 @@ def get_freezer_indexed_paths():
 
 
 def save_scan_results(scanresult):
-    if os.path.exists(db.FREEZER_DB):
-        os.remove(db.FREEZER_DB)
+    if os.path.exists(freezerdb.FREEZER_DB):
+        os.remove(freezerdb.FREEZER_DB)
+    init_workspace()
+    db = freezerdb.FreezerDB()
     results = sorted(scanresult, key=lambda s: s[0].lower())
-    db.init_db()
     for result in results:
         db.insert_album(result)
 
 
 def index_generator():
-    conn = db.get_connection()
-    c = conn.cursor()
-    return c.execute("select * from album")
+    db = FreezerDB()
+    return db.run_query("select * from album")
 
 def read_artists():
-    conn = db.get_connection()
-    c = conn.cursor()
-    return c.execute("select distinct artist from album")
+    db = FreezerDB()
+    return db.run_query("select distinct artist from album")
 
 def read_albums():
-    conn = db.get_connection()
-    c = conn.cursor()
-    return c.execute("select distinct album, artist from album order by artist COLLATE NOCASE")
+    db = FreezerDB()
+    return db.run_query("select distinct album, artist from album order by artist COLLATE NOCASE")
 
 def read_all():
-    conn = db.get_connection()
-    c = conn.cursor()
-    return c.execute("select * from album order by artist COLLATE NOCASE")
+    db = FreezerDB()
+    return db.run_query("select * from album order by artist COLLATE NOCASE")
 
 def serve_forever():
     addr = ("127.0.0.1", 8000)
     server = xmlrpc.server.SimpleXMLRPCServer(addr)
     print("serving on", addr)
-    server.register_function(read_full_index)
+    server.register_function(read_all)
     server.register_function(zip_album)
     server.register_function(search)
     server.serve_forever()
@@ -137,10 +135,15 @@ def get_args():
     add.add_argument("filename", type=str)
 
     init = subparsers.add_parser('init')
+
     scan = subparsers.add_parser('scan')
 
-    parser.add_argument(
-        "--local_list", action="store_true", help="List known local content")
+    subparsers.add_parser('serve')
+
+    show = subparsers.add_parser('show')
+    show.add_argument(
+        "what_to_show", type=str, nargs='?', help="List known local content")
+
     parser.add_argument(
         "--search",
         type=str,
@@ -173,30 +176,35 @@ def get_args():
         help="Serve a Python XML RPC server on port 8000")
     parser.add_argument("--zip_album", type=str)
     parser.add_argument("--output_dir", type=str)
-    args = parser.parse_args()
-    return args
+    return parser
 
 def main():
-    args = get_args()
+    parser = get_args()
+    args = parser.parse_args()
+    print(args)
     if args.command == "init":
         init_workspace()
-    if args.command == "scan":
+    elif args.command == "scan":
         result = scan.perform_scan(get_freezer_indexed_paths(), 8)
         save_scan_results(result)
-    elif args.local_list:
-        print(read_full_index())
+    elif args.command == "show":
+        if args.what_to_show == "all":
+            for i in read_all():
+                print("{:33}{:43}{}".format(i[0], i[1], i[2]))
+        elif args.what_to_show == "albums":
+            for i in read_albums():
+                print("{:43}{}".format(i[1], i[0]))
+        elif args.what_to_show == "artists":
+            for i in read_artists():
+                print(i[0])
+        else:
+            parser.print_usage()
     elif args.show_artists:
         for i in read_artists():
             print(i[0])
-    elif args.show_albums:
-        for i in read_albums():
-            print("{:43}{}".format(i[1], i[0]))
-    elif args.show_locations:
-        for i in read_all():
-            print("{:33}{:33}{}".format(i[1], i[0], i[2]))
     elif args.remote_list:
         print(remote_list(args.remote_list))
-    elif args.serve:
+    elif args.command == "serve":
         serve_forever()
     elif args.search:
         print(search(args.search))
