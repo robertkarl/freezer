@@ -5,6 +5,7 @@ import scan
 import xmlrpc.server
 from zipfile import ZipFile
 import xmlrpc.client
+import sqlite3
 
 FREEZER_DIR=os.path.expanduser("~/.freezer")
 FREEZER_PATHS_FILENAME=os.path.join(FREEZER_DIR, "paths.txt")
@@ -134,3 +135,4 @@ def main():
         parser.print_help()
 if __name__ == "__main__":
     main()
+
