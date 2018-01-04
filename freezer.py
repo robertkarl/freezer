@@ -1,18 +1,21 @@
 #! /usr/bin/env python3
+
 import argparse
 import os
 import scan
+import sqlite3
+import xmlrpc.client
 import xmlrpc.server
 from zipfile import ZipFile
-import xmlrpc.client
-import sqlite3
 
-FREEZER_DIR=os.path.expanduser("~/.freezer")
-FREEZER_PATHS_FILENAME=os.path.join(FREEZER_DIR, "paths.txt")
-FREEZER_INDEX_PATH=os.path.join(FREEZER_DIR, "index.txt")
+FREEZER_DIR = os.path.expanduser("~/.freezer")
+FREEZER_PATHS_FILENAME = os.path.join(FREEZER_DIR, "paths.txt")
+FREEZER_INDEX_PATH = os.path.join(FREEZER_DIR, "index.txt")
+
 
 def init_workspace():
     os.makedirs(FREEZER_DIR, exist_ok=True)
+
 
 def add_indexed_path(paths):
     contents = []
@@ -25,15 +28,19 @@ def add_indexed_path(paths):
     contents = sorted(contents)
     for line in contents:
         print(line)
-    with open(os.path.join(FREEZER_DIR,FREEZER_PATHS_FILENAME), 'w') as paths_file:
+    with open(os.path.join(FREEZER_DIR, FREEZER_PATHS_FILENAME),
+              'w') as paths_file:
         for line in contents:
             paths_file.write(line)
             paths_file.write('\n')
 
+
 def get_freezer_indexed_paths():
-    with open(os.path.join(FREEZER_DIR,FREEZER_PATHS_FILENAME), 'r') as freezer_paths_file:
+    with open(os.path.join(FREEZER_DIR, FREEZER_PATHS_FILENAME),
+              'r') as freezer_paths_file:
         lines = freezer_paths_file.readlines()
     return [i.strip() for i in lines]
+
 
 def save_scan_results(scanresult):
     results = sorted(scanresult, key=lambda s: s[0].lower())
@@ -42,13 +49,16 @@ def save_scan_results(scanresult):
             index_file.write("\t".join(line))
             index_file.write("\n")
 
+
 def index_generator():
     f = open(FREEZER_INDEX_PATH, 'r')
     return f.readlines()
 
+
 def read_full_index():
     with open(FREEZER_INDEX_PATH, 'r') as index_file:
-        return ''.join(index_file.readlines())
+        return [tuple(i.strip().split("\t")) for i in index_file.readlines()]
+
 
 def serve_forever():
     addr = ("127.0.0.1", 8000)
@@ -59,14 +69,17 @@ def serve_forever():
     server.register_function(search)
     server.serve_forever()
 
+
 def get_proxy(addr):
     proxy = xmlrpc.client.ServerProxy(addr)
     return proxy
 
+
 def remote_list(ip_addr_str):
-    assert(type(ip_addr_str) is str)
+    assert (type(ip_addr_str) is str)
     a = xmlrpc.client.ServerProxy(ip_addr_str)
     return a.read_full_index()
+
 
 def search(query):
     result = ''
@@ -76,12 +89,14 @@ def search(query):
                 result += (line)
     return result
 
+
 def remote_search(query, host):
     a = xmlrpc.client.ServerProxy(host)
     return a.search(query)
 
+
 def zip_album(album_name, output_dir="/tmp/freezer"):
-    assert(type(output_dir) is str)
+    assert (type(output_dir) is str)
     album_path = None
     for line in index_generator():
         if line.count(album_name):
@@ -94,23 +109,39 @@ def zip_album(album_name, output_dir="/tmp/freezer"):
         for filename in files:
             print("sending file {}".format(filename))
             song_path = os.path.join(root, filename)
-            zip_output_path = os.path.join(album_name, os.path.basename(song_path))
+            zip_output_path = os.path.join(album_name,
+                                           os.path.basename(song_path))
             zf.write(song_path, arcname=zip_output_path)
     zf.close()
     with open(outfilename, 'rb') as zipbytes:
         return zipbytes.read()
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--add", nargs='+')
     parser.add_argument("--init", action="store_true")
     parser.add_argument("--scan", action="store_true")
-    parser.add_argument("--local_list", action="store_true", help="List known local content")
-    parser.add_argument("--search", type=str, help="search for stuff on a given freezer instance")
-    parser.add_argument("--freezer_host", type=str, default='http://localhost:8000')
-    parser.add_argument("--remote_list", type=str, help="List the content at the address given")
-    parser.add_argument("--remote_search", type=str, help="List the content at the address given")
-    parser.add_argument("--serve", action="store_true", help="Serve a Python XML RPC server on port 8000")
+    parser.add_argument(
+        "--local_list", action="store_true", help="List known local content")
+    parser.add_argument(
+        "--search",
+        type=str,
+        help="search for stuff on a given freezer instance")
+    parser.add_argument(
+        "--freezer_host", type=str, default='http://localhost:8000')
+    parser.add_argument(
+        "--remote_list",
+        type=str,
+        help="List the content at the address given")
+    parser.add_argument(
+        "--remote_search",
+        type=str,
+        help="List the content at the address given")
+    parser.add_argument(
+        "--serve",
+        action="store_true",
+        help="Serve a Python XML RPC server on port 8000")
     parser.add_argument("--zip_album", type=str)
     parser.add_argument("--output_dir", type=str)
     args = parser.parse_args()
@@ -133,6 +164,7 @@ def main():
         add_indexed_path(args.add)
     else:
         parser.print_help()
+
+
 if __name__ == "__main__":
     main()
-

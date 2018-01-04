@@ -8,11 +8,13 @@ import itertools
 import logging
 logging.disable(logging.WARNING)
 
+
 def process_many(filenames):
     answer = set()
     for i in filenames:
         process_one(i, answer)
     return answer
+
 
 def process_one(fname, answer):
     try:
@@ -23,11 +25,13 @@ def process_one(fname, answer):
     except AttributeError:
         pass
 
+
 def partition(inputs, num_buckets):
     buckets = [[] for i in range(num_buckets)]
     for index, value in enumerate(inputs):
         buckets[index % num_buckets].append(value)
     return buckets
+
 
 def collect_fnames(paths_to_search):
     paths = []
@@ -38,6 +42,7 @@ def collect_fnames(paths_to_search):
                 if path[-3:] == "mp3":
                     paths.append(path)
     return paths
+
 
 def print_all_columns(sorted_albums):
     numcolumns = len(sorted_albums[0])
@@ -55,17 +60,19 @@ def print_all_columns(sorted_albums):
     for artist, album, path in sorted_albums:
         print(prefix.format(artist, album, path))
 
+
 def print_albums(sorted_albums):
-    albums = sorted(set([(i[1], i[2])for i in sorted_albums]))
-    for album_name, path in albums: 
+    albums = sorted(set([(i[1], i[2]) for i in sorted_albums]))
+    for album_name, path in albums:
         print("{}\t{}".format(album_name, path))
+
 
 def perform_scan(paths_to_search, num_threads):
     all_fnames = collect_fnames(paths_to_search)
     partitioned_stuff = [[i] for i in partition(all_fnames, num_threads)]
     outputs = [[] for i in range(num_threads)]
     print("Starting scan with {} threads...".format(num_threads))
-    with multiprocessing.Pool(processes=num_threads) as pool:                                                                   
+    with multiprocessing.Pool(processes=num_threads) as pool:
         result = pool.starmap(process_many, partitioned_stuff)
         finalresult = result[0]
         for albumset in result[1:]:
@@ -73,11 +80,12 @@ def perform_scan(paths_to_search, num_threads):
         sorted_albums = sorted(list(finalresult))
     print("processed", len(all_fnames), "music files")
     return sorted_albums
-    
+
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num_threads", type=int, default=multiprocessing.cpu_count())
+    parser.add_argument(
+        "--num_threads", type=int, default=multiprocessing.cpu_count())
     parser.add_argument("--paths", type=str, nargs='+', required=True)
     parser.add_argument("--column", type=str)
     args = parser.parse_args()
@@ -87,6 +95,6 @@ def main():
     else:
         print_all_columns(sorted_albums)
 
+
 if __name__ == "__main__":
     main()
-
