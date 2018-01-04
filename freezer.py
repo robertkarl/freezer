@@ -20,13 +20,12 @@ def init_workspace():
     db.init_db()
 
 
-def add_indexed_path(paths):
+def add_indexed_path(path):
     contents = []
     if os.path.exists(FREEZER_PATHS_FILENAME):
         with open(FREEZER_PATHS_FILENAME, 'r') as paths_file:
             contents = [i.strip() for i in paths_file.readlines()]
-    for path_to_add in paths:
-        contents.append(path_to_add)
+    contents.append(path)
     contents = list(set(contents))
     contents = sorted(contents)
     for line in contents:
@@ -46,7 +45,8 @@ def get_freezer_indexed_paths():
 
 
 def save_scan_results(scanresult):
-    os.remove(db.FREEZER_DB)
+    if os.path.exists(db.FREEZER_DB):
+        os.remove(db.FREEZER_DB)
     results = sorted(scanresult, key=lambda s: s[0].lower())
     db.init_db()
     for result in results:
@@ -57,11 +57,6 @@ def index_generator():
     conn = db.get_connection()
     c = conn.cursor()
     return c.execute("select * from album")
-
-
-def read_full_index():
-    with open(FREEZER_INDEX_PATH, 'r') as index_file:
-        return [tuple(i.strip().split("\t")) for i in index_file.readlines()]
 
 def read_artists():
     conn = db.get_connection()
@@ -134,12 +129,16 @@ def zip_album(album_name, output_dir="/tmp/freezer"):
     with open(outfilename, 'rb') as zipbytes:
         return zipbytes.read()
 
-
-def main():
+def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--add", nargs='+')
-    parser.add_argument("--init", action="store_true")
-    parser.add_argument("--scan", action="store_true")
+    subparsers = parser.add_subparsers(dest='command')
+
+    add = subparsers.add_parser('add')
+    add.add_argument("filename", type=str)
+
+    init = subparsers.add_parser('init')
+    scan = subparsers.add_parser('scan')
+
     parser.add_argument(
         "--local_list", action="store_true", help="List known local content")
     parser.add_argument(
@@ -175,9 +174,13 @@ def main():
     parser.add_argument("--zip_album", type=str)
     parser.add_argument("--output_dir", type=str)
     args = parser.parse_args()
-    if args.init:
+    return args
+
+def main():
+    args = get_args()
+    if args.command == "init":
         init_workspace()
-    elif args.scan:
+    if args.command == "scan":
         result = scan.perform_scan(get_freezer_indexed_paths(), 8)
         save_scan_results(result)
     elif args.local_list:
@@ -199,8 +202,8 @@ def main():
         print(search(args.search))
     elif args.zip_album:
         zip_album(args.zip_album, args.output_dir)
-    elif args.add:
-        add_indexed_path(args.add)
+    elif args.command == "add":
+        add_indexed_path(args.filename)
     else:
         parser.print_help()
 
