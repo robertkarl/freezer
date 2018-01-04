@@ -1,11 +1,9 @@
 import sqlite3
 import os
-from freezer import read_full_index
 FREEZER_DIR = os.path.expanduser("~/.freezer")
 FREEZER_DB = os.path.join(FREEZER_DIR, "albums.db")
 
 conn = None
-
 
 def get_connection():
     global conn
@@ -18,10 +16,14 @@ def init_db():
     conn = get_connection()
     c = conn.cursor()
     c.execute("Create table album (artist text, album text, location text)")
-    for artist, album, path in read_full_index():
-        print("inserting", album)
-        c.execute("insert into album values (?, ?, ?)", (artist, album, path))
 
+
+def insert_album(album_info):
+    assert type(album_info) is tuple
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("insert into album values (?, ?, ?)", album_info)
+    conn.commit()
 
 def query_db():
     conn = get_connection()

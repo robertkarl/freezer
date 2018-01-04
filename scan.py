@@ -1,13 +1,14 @@
 #! /usr/bin/env python3
 import os
 import os.path
-import eyed3
 import multiprocessing
 import argparse
 import itertools
 import logging
-logging.disable(logging.WARNING)
 
+import eyed3
+
+logging.disable(logging.WARNING)
 
 def process_many(filenames):
     answer = set()

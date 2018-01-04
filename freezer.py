@@ -2,11 +2,13 @@
 
 import argparse
 import os
-import scan
 import sqlite3
 import xmlrpc.client
 import xmlrpc.server
 from zipfile import ZipFile
+
+import scan
+import db
 
 FREEZER_DIR = os.path.expanduser("~/.freezer")
 FREEZER_PATHS_FILENAME = os.path.join(FREEZER_DIR, "paths.txt")
@@ -15,6 +17,7 @@ FREEZER_INDEX_PATH = os.path.join(FREEZER_DIR, "index.txt")
 
 def init_workspace():
     os.makedirs(FREEZER_DIR, exist_ok=True)
+    db.init_db()
 
 
 def add_indexed_path(paths):
@@ -44,21 +47,24 @@ def get_freezer_indexed_paths():
 
 def save_scan_results(scanresult):
     results = sorted(scanresult, key=lambda s: s[0].lower())
-    with open(FREEZER_INDEX_PATH, 'w') as index_file:
-        for line in results:
-            index_file.write("\t".join(line))
-            index_file.write("\n")
+    for result in results:
+        db.insert_album(result)
 
 
 def index_generator():
-    f = open(FREEZER_INDEX_PATH, 'r')
-    return f.readlines()
+    conn = db.get_connection()
+    c = conn.cursor()
+    return c.execute("select * from album")
 
 
 def read_full_index():
     with open(FREEZER_INDEX_PATH, 'r') as index_file:
         return [tuple(i.strip().split("\t")) for i in index_file.readlines()]
 
+def read_artists():
+    conn = db.get_connection()
+    c = conn.cursor()
+    return c.execute("select distinct artist from album")
 
 def serve_forever():
     addr = ("127.0.0.1", 8000)
@@ -98,16 +104,16 @@ def remote_search(query, host):
 def zip_album(album_name, output_dir="/tmp/freezer"):
     assert (type(output_dir) is str)
     album_path = None
-    for line in index_generator():
-        if line.count(album_name):
-            album_path = line.split('\t')[-1]
+    for album_tuple in index_generator():
+        if "".join(album_tuple).count(album_name):
+            album_path = album_tuple[-1]
             print("found it at {}".format(album_path.strip()))
             break
     outfilename = os.path.join(output_dir, album_name + '.zip')
     zf = ZipFile(outfilename, 'x')
     for root, dirs, files in os.walk(album_path.strip()):
         for filename in files:
-            print("sending file {}".format(filename))
+            print("{}".format(filename))
             song_path = os.path.join(root, filename)
             zip_output_path = os.path.join(album_name,
                                            os.path.basename(song_path))
@@ -139,6 +145,10 @@ def main():
         type=str,
         help="List the content at the address given")
     parser.add_argument(
+        "--show_artists",
+        action="store_true",
+        )
+    parser.add_argument(
         "--serve",
         action="store_true",
         help="Serve a Python XML RPC server on port 8000")
@@ -152,6 +162,9 @@ def main():
         save_scan_results(result)
     elif args.local_list:
         print(read_full_index())
+    elif args.show_artists:
+        for i in read_artists():
+            print(i[0])
     elif args.remote_list:
         print(remote_list(args.remote_list))
     elif args.serve:
