@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
-import os
-import os.path
-import multiprocessing
 import argparse
 import itertools
 import logging
+import multiprocessing
+import os
+import time
 
 import eyed3
 
@@ -36,13 +36,15 @@ def partition(inputs, num_buckets):
 
 def collect_fnames(paths_to_search):
     paths = []
+    total_size = 0
     for input_dir in paths_to_search:
         for root, dirs, files in os.walk(input_dir):
             for file in files:
                 path = os.path.join(root, file)
                 if path[-3:] == "mp3":
+                    total_size += os.path.getsize(path)
                     paths.append(path)
-    return paths
+    return (paths, total_size)
 
 
 def print_all_columns(sorted_albums):
@@ -69,7 +71,9 @@ def print_albums(sorted_albums):
 
 
 def perform_scan(paths_to_search, num_threads):
-    all_fnames = collect_fnames(paths_to_search)
+    start = time.time()
+    all_fnames, mp3s_size = collect_fnames(paths_to_search)
+    print("found {0:.0f} MB of mp3s".format(float(mp3s_size) / (1024 * 1024)))
     partitioned_stuff = [[i] for i in partition(all_fnames, num_threads)]
     outputs = [[] for i in range(num_threads)]
     print("Starting scan with {} threads...".format(num_threads))
@@ -79,7 +83,7 @@ def perform_scan(paths_to_search, num_threads):
         for albumset in result[1:]:
             finaleresult = finalresult.union(albumset)
         sorted_albums = sorted(list(finalresult))
-    print("processed", len(all_fnames), "music files")
+    print("processed {} files in {:.1f} seconds".format(len(all_fnames), time.time() - start))
     return sorted_albums
 
 

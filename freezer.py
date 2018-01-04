@@ -15,6 +15,13 @@ FREEZER_DIR = os.path.expanduser("~/.freezer")
 FREEZER_PATHS_FILENAME = os.path.join(FREEZER_DIR, "paths.txt")
 FREEZER_INDEX_PATH = os.path.join(FREEZER_DIR, "index.txt")
 
+def get_size(start_path = '.'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            total_size += os.path.getsize(fp)
+    return total_size
 
 def init_workspace():
     os.makedirs(FREEZER_DIR, exist_ok=True)
@@ -198,7 +205,8 @@ def main():
     elif args.command == "add":
         add_indexed_path(args.filename)
     elif args.command == "search":
-        print(search(args.query))
+        for i in search(args.query):
+            print("{:33}{:43}{}".format(i[0], i[1], i[2]))
     else:
         parser.print_help()
 
