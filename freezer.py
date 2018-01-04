@@ -46,7 +46,9 @@ def get_freezer_indexed_paths():
 
 
 def save_scan_results(scanresult):
+    os.remove(db.FREEZER_DB)
     results = sorted(scanresult, key=lambda s: s[0].lower())
+    db.init_db()
     for result in results:
         db.insert_album(result)
 
@@ -188,7 +190,7 @@ def main():
             print("{:43}{}".format(i[1], i[0]))
     elif args.show_locations:
         for i in read_all():
-            print("{}\t{}\t{}".format(i[1], i[0], i[2]))
+            print("{:33}{:33}{}".format(i[1], i[0], i[2]))
     elif args.remote_list:
         print(remote_list(args.remote_list))
     elif args.serve:
