@@ -35,10 +35,10 @@ class FreezerDB(object):
         for artist, album in artist_album_pairs:
             c.execute("insert into album values (?, ?, ?)", (artist, album))
 
-    def run_query(self, query_str):
+    def run_query(self, *query_str):
         c = self.conn.cursor()
         ans = []
-        for row in c.execute(query_str):
+        for row in c.execute(*query_str):
             ans.append(row)
         return ans
 

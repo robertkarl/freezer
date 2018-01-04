@@ -92,13 +92,13 @@ def remote_list(ip_addr_str):
     return a.read_full_index()
 
 
-def search(query):
-    result = ''
-    with open(FREEZER_INDEX_PATH, 'r') as index_file:
-        for line in index_file.readlines():
-            if line.lower().count(query.lower()) > 0:
-                result += (line)
-    return result
+def search(searchterm):
+    db = freezerdb.FreezerDB()
+    ans = []
+    for row in read_all():
+        if "".join(row).lower().count(searchterm.lower()) > 0:
+            ans.append(row)
+    return ans
 
 
 def remote_search(query, host):
@@ -144,6 +144,10 @@ def get_args():
     show.add_argument(
         "what_to_show", type=str, nargs='?', help="List known local content")
 
+    search = subparsers.add_parser('search')
+    search.add_argument(
+        "query", type=str, nargs='?')
+
     subparsers.add_parser('init')
     subparsers.add_parser('scan')
     subparsers.add_parser('serve')
@@ -152,10 +156,6 @@ def get_args():
     zip_parser.add_argument("album_to_zip")
     zip_parser.add_argument("output_dir")
 
-    parser.add_argument(
-        "--search",
-        type=str,
-        help="search for stuff on a given freezer instance")
     parser.add_argument(
         "--freezer_host", type=str, default='http://localhost:8000')
     parser.add_argument(
@@ -166,20 +166,6 @@ def get_args():
         "--remote_search",
         type=str,
         help="List the content at the address given")
-    parser.add_argument(
-        "--show_artists",
-        action="store_true",
-        )
-    parser.add_argument(
-        "--show_albums",
-        action="store_true",
-        )
-    parser.add_argument(
-        "--show_locations",
-        action="store_true",
-        )
-    parser.add_argument("--zip_album", type=str)
-    parser.add_argument("--output_dir", type=str)
     return parser
 
 def main():
@@ -203,19 +189,16 @@ def main():
                 print(i[0])
         else:
             parser.print_usage()
-    elif args.show_artists:
-        for i in read_artists():
-            print(i[0])
     elif args.remote_list:
         print(remote_list(args.remote_list))
     elif args.command == "serve":
         serve_forever()
-    elif args.search:
-        print(search(args.search))
     elif args.command == "zip":
         zip_album(args.album_to_zip, args.output_dir)
     elif args.command == "add":
         add_indexed_path(args.filename)
+    elif args.command == "search":
+        print(search(args.query))
     else:
         parser.print_help()
 
