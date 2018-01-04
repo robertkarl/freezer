@@ -106,15 +106,21 @@ def remote_search(query, host):
     return a.search(query)
 
 
-def zip_album(album_name, output_dir="/tmp/freezer"):
+def zip_album(query, output_dir="/tmp/freezer"):
     assert (type(output_dir) is str)
     album_path = None
+    album_name = None
+    artist_name = None
     for album_tuple in index_generator():
-        if "".join(album_tuple).count(album_name):
+        if "".join(album_tuple).lower().count(query.lower()):
             album_path = album_tuple[-1]
+            album_name = album_tuple[1]
+            artist_name = album_tuple[0]
             print("found it at {}".format(album_path.strip()))
             break
-    outfilename = os.path.join(output_dir, album_name + '.zip')
+    if album_path is None:
+        raise RuntimeError()
+    outfilename = os.path.join(output_dir, "{} - {}".format(artist_name, album_name) + '.zip')
     zf = ZipFile(outfilename, 'x')
     for root, dirs, files in os.walk(album_path.strip()):
         for filename in files:
@@ -134,15 +140,17 @@ def get_args():
     add = subparsers.add_parser('add')
     add.add_argument("filename", type=str)
 
-    init = subparsers.add_parser('init')
-
-    scan = subparsers.add_parser('scan')
-
-    subparsers.add_parser('serve')
-
     show = subparsers.add_parser('show')
     show.add_argument(
         "what_to_show", type=str, nargs='?', help="List known local content")
+
+    subparsers.add_parser('init')
+    subparsers.add_parser('scan')
+    subparsers.add_parser('serve')
+
+    zip_parser = subparsers.add_parser('zip')
+    zip_parser.add_argument("album_to_zip")
+    zip_parser.add_argument("output_dir")
 
     parser.add_argument(
         "--search",
@@ -170,10 +178,6 @@ def get_args():
         "--show_locations",
         action="store_true",
         )
-    parser.add_argument(
-        "--serve",
-        action="store_true",
-        help="Serve a Python XML RPC server on port 8000")
     parser.add_argument("--zip_album", type=str)
     parser.add_argument("--output_dir", type=str)
     return parser
@@ -208,8 +212,8 @@ def main():
         serve_forever()
     elif args.search:
         print(search(args.search))
-    elif args.zip_album:
-        zip_album(args.zip_album, args.output_dir)
+    elif args.command == "zip":
+        zip_album(args.album_to_zip, args.output_dir)
     elif args.command == "add":
         add_indexed_path(args.filename)
     else:
