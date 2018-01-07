@@ -101,7 +101,7 @@ class FreezerInstance(object):
         return zip_album(query)
 
 def serve_forever():
-    addr = ("127.0.0.1", 8000)
+    addr = ("0.0.0.0", 8000)
     server = xmlrpc.server.SimpleXMLRPCServer(addr)
     print("serving on", addr)
     server.register_function(read_all)
@@ -196,7 +196,6 @@ def get_args():
 def main():
     parser = get_args()
     args = parser.parse_args()
-    print(args)
     thefreezer = FreezerInstance(args.remote_host)
     if args.command == "init":
         init_workspace()
