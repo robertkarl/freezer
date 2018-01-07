@@ -79,6 +79,27 @@ def read_all():
     db = FreezerDB()
     return db.run_query("select * from album order by artist COLLATE NOCASE")
 
+
+class FreezerInstance(object):
+
+    def __init__(self, addr=None):
+        assert addr is None or type(addr) is str
+        self.addr = addr
+        if self.addr is not None:
+            self.proxy = get_proxy(addr)
+        else:
+            self.proxy = None
+
+    def search(self, query):
+        if self.proxy is not None:
+            return self.proxy.search(query)
+        return search(query)
+
+    def zip_album(self, query):
+        if self.proxy is not None:
+            return self.proxy.zip_album(query)
+        return zip_album(query)
+
 def serve_forever():
     addr = ("127.0.0.1", 8000)
     server = xmlrpc.server.SimpleXMLRPCServer(addr)
@@ -114,8 +135,7 @@ def remote_search(query, host):
     return a.search(query)
 
 
-def zip_album(query, output_dir="/tmp/freezer"):
-    assert (type(output_dir) is str)
+def zip_album(query):
     album_path = None
     album_name = None
     artist_name = None
@@ -128,7 +148,10 @@ def zip_album(query, output_dir="/tmp/freezer"):
             break
     if album_path is None:
         raise RuntimeError()
+    output_dir = "/tmp/freezer"
+    os.makedirs(output_dir, exist_ok=True)
     outfilename = os.path.join(output_dir, "{} - {}".format(artist_name, album_name) + '.zip')
+    print(outfilename)
     zf = ZipFile(outfilename, 'x')
     for root, dirs, files in os.walk(album_path.strip()):
         for filename in files:
@@ -143,6 +166,8 @@ def zip_album(query, output_dir="/tmp/freezer"):
 
 def get_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--remote_host", default=None)
     subparsers = parser.add_subparsers(dest='command')
 
     add = subparsers.add_parser('add')
@@ -160,25 +185,19 @@ def get_args():
     subparsers.add_parser('scan')
     subparsers.add_parser('serve')
 
-    zip_parser = subparsers.add_parser('zip')
+    zip_parser = subparsers.add_parser('zip_album')
     zip_parser.add_argument("album_to_zip")
     zip_parser.add_argument("output_dir")
 
     parser.add_argument(
         "--freezer_host", type=str, default='http://localhost:8000')
-    parser.add_argument(
-        "--remote_list",
-        type=str,
-        help="List the content at the address given")
-    parser.add_argument(
-        "--remote_search",
-        type=str,
-        help="List the content at the address given")
     return parser
 
 def main():
     parser = get_args()
     args = parser.parse_args()
+    print(args)
+    thefreezer = FreezerInstance(args.remote_host)
     if args.command == "init":
         init_workspace()
     elif args.command == "scan":
@@ -196,16 +215,16 @@ def main():
                 print(i[0])
         else:
             parser.print_usage()
-    elif args.remote_list:
-        print(remote_list(args.remote_list))
     elif args.command == "serve":
         serve_forever()
-    elif args.command == "zip":
-        zip_album(args.album_to_zip, args.output_dir)
+    elif args.command == "zip_album":
+        zipbytes = thefreezer.zip_album(args.album_to_zip)
+        outf = open(args.output_dir, 'wb')
+        outf.write(zipbytes)
     elif args.command == "add":
         add_indexed_path(args.filenames)
     elif args.command == "search":
-        for i in search(args.query):
+        for i in thefreezer.search(args.query):
             print("{:33}{:43}{}".format(i[0], i[1], i[2]))
     else:
         parser.print_help()
