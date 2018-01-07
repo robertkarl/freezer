@@ -15,14 +15,6 @@ FREEZER_DIR = os.path.expanduser("~/.freezer")
 FREEZER_PATHS_FILENAME = os.path.join(FREEZER_DIR, "paths.txt")
 FREEZER_INDEX_PATH = os.path.join(FREEZER_DIR, "index.txt")
 
-def get_size(start_path = '.'):
-    total_size = 0
-    for dirpath, dirnames, filenames in os.walk(start_path):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
-            total_size += os.path.getsize(fp)
-    return total_size
-
 def init_workspace():
     os.makedirs(FREEZER_DIR, exist_ok=True)
     db = freezerdb.FreezerDB()
@@ -62,24 +54,6 @@ def save_scan_results(scanresult):
     for result in results:
         db.insert_album(result)
 
-
-def index_generator():
-    db = FreezerDB()
-    return db.run_query("select * from album")
-
-def read_artists():
-    db = FreezerDB()
-    return db.run_query("select distinct artist from album")
-
-def read_albums():
-    db = FreezerDB()
-    return db.run_query("select distinct album, artist from album order by artist COLLATE NOCASE")
-
-def read_all():
-    db = FreezerDB()
-    return db.run_query("select * from album order by artist COLLATE NOCASE")
-
-
 class FreezerInstance(object):
 
     def __init__(self, addr=None):
@@ -104,9 +78,11 @@ def serve_forever():
     addr = ("0.0.0.0", 8000)
     server = xmlrpc.server.SimpleXMLRPCServer(addr)
     print("serving on", addr)
-    server.register_function(read_all)
-    server.register_function(zip_album)
-    server.register_function(search)
+    frzr = FreezerInstance()
+    db = FreezerDB()
+    server.register_function(db.index_generator, "read_all")
+    server.register_function(frzr.zip_album)
+    server.register_function(frzr.search, name="search")
     server.serve_forever()
 
 
@@ -124,7 +100,7 @@ def remote_list(ip_addr_str):
 def search(searchterm):
     db = freezerdb.FreezerDB()
     ans = []
-    for row in read_all():
+    for row in db.read_all():
         if "".join(row).lower().count(searchterm.lower()) > 0:
             ans.append(row)
     return ans
@@ -136,10 +112,11 @@ def remote_search(query, host):
 
 
 def zip_album(query):
+    db = FreezerDB()
     album_path = None
     album_name = None
     artist_name = None
-    for album_tuple in index_generator():
+    for album_tuple in db.read_all():
         if "".join(album_tuple).lower().count(query.lower()):
             album_path = album_tuple[-1]
             album_name = album_tuple[1]
@@ -197,6 +174,7 @@ def main():
     parser = get_args()
     args = parser.parse_args()
     thefreezer = FreezerInstance(args.remote_host)
+    db = FreezerDB()
     if args.command == "init":
         init_workspace()
     elif args.command == "scan":
@@ -204,7 +182,7 @@ def main():
         save_scan_results(result)
     elif args.command == "show":
         if args.what_to_show == "all":
-            for i in read_all():
+            for i in db.index_generator():
                 print("{:33}{:43}{}".format(i[0], i[1], i[2]))
         elif args.what_to_show == "albums":
             for i in read_albums():

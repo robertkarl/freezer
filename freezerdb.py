@@ -42,3 +42,15 @@ class FreezerDB(object):
             ans.append(row)
         return ans
 
+    def read_artists(self):
+        return self.run_query("select distinct artist from album")
+
+    def read_albums(self):
+        return self.run_query("select distinct album, artist from album order by artist COLLATE NOCASE")
+
+    def read_all(self):
+        return self.run_query("select * from album order by artist COLLATE NOCASE")
+
+    def index_generator(self):
+        return self.run_query("select * from album")
+
