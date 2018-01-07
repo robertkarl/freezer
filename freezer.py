@@ -152,7 +152,7 @@ def zip_album(query):
     os.makedirs(output_dir, exist_ok=True)
     outfilename = os.path.join(output_dir, "{} - {}".format(artist_name, album_name) + '.zip')
     print(outfilename)
-    zf = ZipFile(outfilename, 'x')
+    zf = ZipFile(outfilename, 'w')
     for root, dirs, files in os.walk(album_path.strip()):
         for filename in files:
             print("{}".format(filename))
@@ -220,7 +220,7 @@ def main():
     elif args.command == "zip_album":
         zipbytes = thefreezer.zip_album(args.album_to_zip)
         outf = open(args.output_dir, 'wb')
-        outf.write(zipbytes)
+        outf.write(zipbytes.data)
     elif args.command == "add":
         add_indexed_path(args.filenames)
     elif args.command == "search":
