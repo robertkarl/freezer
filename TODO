@@ -1,0 +1,1 @@
+Return a sensible error when trying to use files that aren't currently accessible on disk. For example if a network drive isn't available and we're trying to zip files from it.
