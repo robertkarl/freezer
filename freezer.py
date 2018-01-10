@@ -152,7 +152,7 @@ def get_args():
 
     show = subparsers.add_parser('show')
     show.add_argument(
-        "what_to_show", type=str, nargs='?', help="List known local content")
+        "what_to_show", type=str, choices = ('all', 'albums', 'artists'), help="List known local content")
 
     search = subparsers.add_parser('search')
     search.add_argument(
@@ -185,10 +185,10 @@ def main():
             for i in db.index_generator():
                 print("{:33}{:43}{}".format(i[0], i[1], i[2]))
         elif args.what_to_show == "albums":
-            for i in read_albums():
+            for i in db.read_albums():
                 print("{:43}{}".format(i[1], i[0]))
         elif args.what_to_show == "artists":
-            for i in read_artists():
+            for i in db.read_artists():
                 print(i[0])
         else:
             parser.print_usage()
@@ -197,7 +197,7 @@ def main():
     elif args.command == "zip_album":
         zipbytes = thefreezer.zip_album(args.album_to_zip)
         outf = open(args.output_dir, 'wb')
-        outf.write(zipbytes.data)
+        outf.write(zipbytes)
     elif args.command == "add":
         add_indexed_path(args.filenames)
     elif args.command == "search":
