@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import subprocess
 import sqlite3
 import xmlrpc.client
 import xmlrpc.server
@@ -165,6 +166,9 @@ def get_args():
     zip_parser = subparsers.add_parser('archive')
     zip_parser.add_argument("album_to_zip")
 
+    zip_parser = subparsers.add_parser('play')
+    zip_parser.add_argument("album_to_zip")
+
     parser.add_argument(
         "--freezer_host", type=str, default='http://localhost:8000')
     return parser
@@ -197,7 +201,19 @@ def main():
         album_name, zipbytes = thefreezer.zip_album(args.album_to_zip)
         outf = open(os.path.join(os.getcwd(), album_name + ".zip"), 'wb')
         outf.write(zipbytes)
+    elif args.command == "play":
+        album_name, zipbytes = thefreezer.zip_album(args.album_to_zip)
+        outfname = os.path.join(os.getcwd(), album_name + ".zip")
+        with open(outfname, 'wb') as outf:
+            outf.write(zipbytes)
+            outf.flush()
+            os.fsync(outf)
+        # -o forces overwrite lol
+        subprocess.run(["unzip","-o", outfname])
+        subprocess.run(["open", album_name, '-a', 'itunes'])
     elif args.command == "add":
+        add_indexed_path(args.filenames)
+    elif args.command == "play":
         add_indexed_path(args.filenames)
     elif args.command == "search":
         for i in thefreezer.search(args.query):
