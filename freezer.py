@@ -139,7 +139,7 @@ def zip_album(query):
             zf.write(song_path, arcname=zip_output_path)
     zf.close()
     with open(outfilename, 'rb') as zipbytes:
-        return zipbytes.read()
+        return (album_name, zipbytes.read())
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -162,9 +162,8 @@ def get_args():
     subparsers.add_parser('scan')
     subparsers.add_parser('serve')
 
-    zip_parser = subparsers.add_parser('zip_album')
+    zip_parser = subparsers.add_parser('archive')
     zip_parser.add_argument("album_to_zip")
-    zip_parser.add_argument("output_dir")
 
     parser.add_argument(
         "--freezer_host", type=str, default='http://localhost:8000')
@@ -194,9 +193,9 @@ def main():
             parser.print_usage()
     elif args.command == "serve":
         serve_forever()
-    elif args.command == "zip_album":
-        zipbytes = thefreezer.zip_album(args.album_to_zip)
-        outf = open(args.output_dir, 'wb')
+    elif args.command == "archive":
+        album_name, zipbytes = thefreezer.zip_album(args.album_to_zip)
+        outf = open(os.path.join(os.getcwd(), album_name + ".zip"), 'wb')
         outf.write(zipbytes)
     elif args.command == "add":
         add_indexed_path(args.filenames)
