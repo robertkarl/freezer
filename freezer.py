@@ -1,12 +1,25 @@
 #! /usr/bin/env python3
 
+"""
+
+pip3 install eyed3
+brew install libmagic
+pip3 install libmagic
+pip3 install python-vlc
+
+"""
+
 import argparse
+import glob
 import os
-import subprocess
 import sqlite3
+import subprocess
+import time
 import xmlrpc.client
 import xmlrpc.server
 from zipfile import ZipFile
+
+import vlc
 
 import scan
 import freezerdb
@@ -210,7 +223,16 @@ def main():
             os.fsync(outf)
         # -o forces overwrite lol
         subprocess.run(["unzip","-o", outfname])
-        subprocess.run(["open", album_name, '-a', 'itunes'])
+        filelist = sorted(glob.glob(album_name + "/*.mp3"))
+        print(filelist)
+        media_list = vlc.MediaList(filelist)
+        print(media_list)
+        player = vlc.MediaListPlayer()
+        player.set_media_list(media_list)
+        player.play()
+        while player.is_playing():
+            time.sleep(1)
+
     elif args.command == "add":
         add_indexed_path(args.filenames)
     elif args.command == "play":
