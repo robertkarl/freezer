@@ -12,6 +12,7 @@ pip3 install python-vlc
 import argparse
 import glob
 import os
+import pdb
 import sqlite3
 import subprocess
 import time
@@ -135,18 +136,16 @@ def zip_album(query):
             album_path = album_tuple[-1]
             album_name = album_tuple[1]
             artist_name = album_tuple[0]
-            print("found it at {}".format(album_path.strip()))
             break
     if album_path is None:
         raise RuntimeError()
     output_dir = "/tmp/freezer"
     os.makedirs(output_dir, exist_ok=True)
     outfilename = os.path.join(output_dir, "{} - {}".format(artist_name, album_name) + '.zip')
-    print(outfilename)
+    print("archiving content at {} to {}".format(album_path.strip(), outfilename))
     zf = ZipFile(outfilename, 'w')
     for root, dirs, files in os.walk(album_path.strip()):
         for filename in files:
-            print("{}".format(filename))
             song_path = os.path.join(root, filename)
             zip_output_path = os.path.join(album_name,
                                            os.path.basename(song_path))
@@ -224,14 +223,13 @@ def main():
         # -o forces overwrite lol
         subprocess.run(["unzip","-o", outfname])
         filelist = sorted(glob.glob(album_name + "/*.mp3"))
-        print(filelist)
+        for f in filelist:
+            print(f)
         media_list = vlc.MediaList(filelist)
-        print(media_list)
         player = vlc.MediaListPlayer()
         player.set_media_list(media_list)
         player.play()
-        while player.is_playing():
-            time.sleep(1)
+        import pdb; pdb.set_trace()
 
     elif args.command == "add":
         add_indexed_path(args.filenames)
