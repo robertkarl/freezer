@@ -142,7 +142,7 @@ def zip_album(query):
     output_dir = "/tmp/freezer"
     os.makedirs(output_dir, exist_ok=True)
     outfilename = os.path.join(output_dir, "{} - {}".format(artist_name, album_name) + '.zip')
-    print("archiving content at {} to {}".format(album_path.strip(), outfilename))
+    print("{}".format(outfilename))
     zf = ZipFile(outfilename, 'w')
     for root, dirs, files in os.walk(album_path.strip()):
         for filename in files:
