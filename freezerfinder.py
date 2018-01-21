@@ -15,14 +15,10 @@ def on_service_state_change(zeroconf, service_type, name, state_change):
     if state_change is ServiceStateChange.Added:
         info = zeroconf.get_service_info(service_type, name)
         # connect to the server
-        if info:
-            addrstr = "http://{}:{}/".format(socket.inet_ntoa(info.address), info.port)
+        if info and name.count("freezer"):
+            addrstr = "http://{}:{}".format(socket.inet_ntoa(info.address), info.port)
             print("attempting to connect to xmlprc at {}".format(addrstr))
             a = xmlrpc.client.ServerProxy(addrstr)
-            print("calling a method on it")
-            ans = a.bogus()
-            print('dont calling')
-            print(a.bogus())
             print(a.read_albums())
             print("done")
 

@@ -46,6 +46,7 @@ class FreezerServer(object):
         server.register_function(frzr.zip_album)
         server.register_function(bogus)
         server.register_function(frzr.search, name="search")
+        server.serve_forever()
         try:
             while True:
                 time.sleep(0.1)
