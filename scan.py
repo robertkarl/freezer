@@ -10,6 +10,7 @@ import eyed3
 
 logging.disable(logging.WARNING)
 
+
 def process_many(filenames):
     answer = set()
     for i in filenames:
@@ -73,7 +74,8 @@ def print_albums(sorted_albums):
 def perform_scan(paths_to_search, num_threads):
     start = time.time()
     all_fnames, mp3s_size = collect_fnames(paths_to_search)
-    print("found {0:.0f} GB of mp3s".format(float(mp3s_size) / (1024 * 1024 * 1024)))
+    print("found {0:.0f} GB of mp3s".format(
+        float(mp3s_size) / (1024 * 1024 * 1024)))
     partitioned_stuff = [[i] for i in partition(all_fnames, num_threads)]
     outputs = [[] for i in range(num_threads)]
     print("Starting scan with {} threads...".format(num_threads))
@@ -83,7 +85,9 @@ def perform_scan(paths_to_search, num_threads):
         for albumset in result[1:]:
             finaleresult = finalresult.union(albumset)
         sorted_albums = sorted(list(finalresult))
-    print("processed {} files in {:.1f} seconds".format(len(all_fnames), time.time() - start))
+    print("processed {} files in {:.1f} seconds".format(
+        len(all_fnames),
+        time.time() - start))
     return sorted_albums
 
 

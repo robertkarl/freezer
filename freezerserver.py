@@ -9,16 +9,14 @@ from freezerdb import FreezerDB
 
 
 class FreezerServer(object):
-
     def __init__(self):
         pass
 
     def register_zeroconf(self):
-        desc = {} 
-        self.info = ServiceInfo("_http._tcp.local.",
-                        "freezer._http._tcp.local.",
-                        socket.inet_aton("127.0.0.1"), 8000, 0, 0,
-                        desc, "somehost.local.")
+        desc = {}
+        self.info = ServiceInfo(
+            "_http._tcp.local.", "freezer._http._tcp.local.",
+            socket.inet_aton("127.0.0.1"), 8000, 0, 0, desc, "somehost.local.")
         self.zc = Zeroconf()
         self.zc.register_service(self.info)
 
@@ -44,4 +42,3 @@ class FreezerServer(object):
     def close(self):
         self.zc.unregister_service(self.info)
         self.zc.close()
-

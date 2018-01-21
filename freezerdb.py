@@ -3,15 +3,15 @@ import os
 FREEZER_DIR = os.path.expanduser("~/.freezer")
 FREEZER_DB = os.path.join(FREEZER_DIR, "albums.db")
 
-class FreezerDB(object):
 
+class FreezerDB(object):
     def __init__(self):
         self.conn = sqlite3.connect(FREEZER_DB)
 
     def init_db(self):
         c = self.conn.cursor()
-        c.execute("Create table album (artist text, album text, location text)")
-
+        c.execute(
+            "Create table album (artist text, album text, location text)")
 
     def insert_album(self, album_info):
         assert type(album_info) is tuple
@@ -26,7 +26,6 @@ class FreezerDB(object):
             print(row)
             ans.append(row)
         return ans
-
 
     def insert_albums(self, artist_album_pairs):
         for arg in artist_album_pairs:
@@ -46,11 +45,13 @@ class FreezerDB(object):
         return self.run_query("select distinct artist from album")
 
     def read_albums(self):
-        return self.run_query("select distinct album, artist from album order by artist COLLATE NOCASE")
+        return self.run_query(
+            "select distinct album, artist from album order by artist COLLATE NOCASE"
+        )
 
     def read_all(self):
-        return self.run_query("select * from album order by artist COLLATE NOCASE")
+        return self.run_query(
+            "select * from album order by artist COLLATE NOCASE")
 
     def index_generator(self):
         return self.run_query("select * from album")
-
