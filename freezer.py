@@ -17,7 +17,6 @@ import sqlite3
 import subprocess
 import time
 import xmlrpc.client
-import xmlrpc.server
 from zipfile import ZipFile
 
 import vlc
@@ -88,18 +87,6 @@ class FreezerInstance(object):
         if self.proxy is not None:
             return self.proxy.zip_album(query)
         return zip_album(query)
-
-def serve_forever():
-    addr = ("0.0.0.0", 8000)
-    server = xmlrpc.server.SimpleXMLRPCServer(addr)
-    print("serving on", addr)
-    frzr = FreezerInstance()
-    db = FreezerDB()
-    server.register_function(db.index_generator, "read_all")
-    server.register_function(frzr.zip_album)
-    server.register_function(frzr.search, name="search")
-    server.serve_forever()
-
 
 def get_proxy(addr):
     proxy = xmlrpc.client.ServerProxy(addr)
@@ -173,7 +160,6 @@ def get_args():
 
     subparsers.add_parser('init')
     subparsers.add_parser('scan')
-    subparsers.add_parser('serve')
 
     zip_parser = subparsers.add_parser('archive')
     zip_parser.add_argument("album_to_zip")
@@ -207,8 +193,6 @@ def main():
                 print(i[0])
         else:
             parser.print_usage()
-    elif args.command == "serve":
-        serve_forever()
     elif args.command == "archive":
         album_name, zipbytes = thefreezer.zip_album(args.album_to_zip)
         outf = open(os.path.join(os.getcwd(), album_name + ".zip"), 'wb')
