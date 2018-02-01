@@ -142,7 +142,6 @@ def zip_album(query):
     output_dir = "/tmp/freezer"
     os.makedirs(output_dir, exist_ok=True)
     outfilename = os.path.join(output_dir, "{} - {}".format(artist_name, album_name) + '.zip')
-    print("archiving content at {} to {}".format(album_path.strip(), outfilename))
     zf = ZipFile(outfilename, 'w')
     for root, dirs, files in os.walk(album_path.strip()):
         for filename in files:
@@ -211,8 +210,10 @@ def main():
         serve_forever()
     elif args.command == "archive":
         album_name, zipbytes = thefreezer.zip_album(args.album_to_zip)
-        outf = open(os.path.join(os.getcwd(), album_name + ".zip"), 'wb')
+        outpath = os.path.join(os.getcwd(), album_name + ".zip")
+        outf = open(outpath, 'wb')
         outf.write(zipbytes)
+        print(outpath)
     elif args.command == "play":
         album_name, zipbytes = thefreezer.zip_album(args.album_to_zip)
         outfname = os.path.join(os.getcwd(), album_name + ".zip")
