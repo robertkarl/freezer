@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-
 """
 
 pip3 install eyed3
@@ -90,7 +89,6 @@ class FreezerInstance(object):
             return self.proxy.zip_album(query)
         return zip_album(query)
 
-
 def get_proxy(addr):
     proxy = xmlrpc.client.ServerProxy(addr)
     return proxy
@@ -133,8 +131,6 @@ def zip_album(query):
     os.makedirs(output_dir, exist_ok=True)
     outfilename = os.path.join(
         output_dir, "{} - {}".format(artist_name, album_name) + '.zip')
-    print("archiving content at {} to {}".format(album_path.strip(),
-                                                 outfilename))
     zf = ZipFile(outfilename, 'w')
     for root, dirs, files in os.walk(album_path.strip()):
         for filename in files:
@@ -203,8 +199,10 @@ def main():
             parser.print_usage()
     elif args.command == "archive":
         album_name, zipbytes = thefreezer.zip_album(args.album_to_zip)
-        outf = open(os.path.join(os.getcwd(), album_name + ".zip"), 'wb')
+        outpath = os.path.join(os.getcwd(), album_name + ".zip")
+        outf = open(outpath, 'wb')
         outf.write(zipbytes)
+        print(outpath)
     elif args.command == "play":
         album_name, zipbytes = thefreezer.zip_album(args.album_to_zip)
         outfname = os.path.join(os.getcwd(), album_name + ".zip")
@@ -221,9 +219,10 @@ def main():
         player = vlc.MediaListPlayer()
         player.set_media_list(media_list)
         player.play()
+        # Dump user into a PDB session. Songs can be controlled from there in
+        # lieu of a real interface of some kind.
         import pdb
         pdb.set_trace()
-
     elif args.command == "add":
         add_indexed_path(args.filenames)
     elif args.command == "play":
