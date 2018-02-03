@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-
 """
 
 pip3 install eyed3
@@ -30,10 +29,12 @@ FREEZER_DIR = os.path.expanduser("~/.freezer")
 FREEZER_PATHS_FILENAME = os.path.join(FREEZER_DIR, "paths.txt")
 FREEZER_INDEX_PATH = os.path.join(FREEZER_DIR, "index.txt")
 
+
 def init_workspace():
     os.makedirs(FREEZER_DIR, exist_ok=True)
     db = freezerdb.FreezerDB()
     db.init_db()
+
 
 def add_indexed_path(paths):
     contents = []
@@ -69,8 +70,8 @@ def save_scan_results(scanresult):
     for result in results:
         db.insert_album(result)
 
-class FreezerInstance(object):
 
+class FreezerInstance(object):
     def __init__(self, addr=None):
         assert addr is None or type(addr) is str
         self.addr = addr
@@ -88,6 +89,7 @@ class FreezerInstance(object):
         if self.proxy is not None:
             return self.proxy.zip_album(query)
         return zip_album(query)
+
 
 def serve_forever():
     addr = ("0.0.0.0", 8000)
@@ -141,7 +143,8 @@ def zip_album(query):
         raise RuntimeError()
     output_dir = "/tmp/freezer"
     os.makedirs(output_dir, exist_ok=True)
-    outfilename = os.path.join(output_dir, "{} - {}".format(artist_name, album_name) + '.zip')
+    outfilename = os.path.join(
+        output_dir, "{} - {}".format(artist_name, album_name) + '.zip')
     zf = ZipFile(outfilename, 'w')
     for root, dirs, files in os.walk(album_path.strip()):
         for filename in files:
@@ -153,10 +156,10 @@ def zip_album(query):
     with open(outfilename, 'rb') as zipbytes:
         return (album_name, zipbytes.read())
 
+
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--remote_host", default=None)
+    parser.add_argument("--remote_host", default=None)
     subparsers = parser.add_subparsers(dest='command')
 
     add = subparsers.add_parser('add')
@@ -164,11 +167,13 @@ def get_args():
 
     show = subparsers.add_parser('show')
     show.add_argument(
-        "what_to_show", type=str, choices = ('all', 'albums', 'artists'), help="List known local content")
+        "what_to_show",
+        type=str,
+        choices=('all', 'albums', 'artists'),
+        help="List known local content")
 
     search = subparsers.add_parser('search')
-    search.add_argument(
-        "query", type=str, nargs='?')
+    search.add_argument("query", type=str, nargs='?')
 
     subparsers.add_parser('init')
     subparsers.add_parser('scan')
@@ -183,6 +188,7 @@ def get_args():
     parser.add_argument(
         "--freezer_host", type=str, default='http://localhost:8000')
     return parser
+
 
 def main():
     parser = get_args()
@@ -222,7 +228,7 @@ def main():
             outf.flush()
             os.fsync(outf)
         # -o forces overwrite lol
-        subprocess.run(["unzip","-o", outfname])
+        subprocess.run(["unzip", "-o", outfname])
         filelist = sorted(glob.glob(album_name + "/*.mp3"))
         for f in filelist:
             print(f)
@@ -230,8 +236,10 @@ def main():
         player = vlc.MediaListPlayer()
         player.set_media_list(media_list)
         player.play()
-        import pdb; pdb.set_trace()
-
+        # Dump user into a PDB session. Songs can be controlled from there in
+        # lieu of a real interface of some kind.
+        import pdb
+        pdb.set_trace()
     elif args.command == "add":
         add_indexed_path(args.filenames)
     elif args.command == "play":
