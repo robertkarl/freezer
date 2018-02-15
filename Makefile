@@ -1,4 +1,4 @@
-all:
+freezer:
 	pyinstaller --onefile freezer.spec
-install:
-	cp dest/freezer /usr/local/bin/freezer
+install: freezer
+	cp dist/freezer /usr/local/bin/freezer

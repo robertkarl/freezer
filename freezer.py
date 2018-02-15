@@ -145,21 +145,21 @@ def zip_album(query):
             album_name = album_tuple[1]
             artist_name = album_tuple[0]
             break
-    if album_path is None:
-        raise RuntimeError()
     output_dir = FREEZER_TMP_DIR
-    os.makedirs(output_dir, exist_ok=True)
     artist_album_str = "{} - {}".format(artist_name, album_name)
     outfilename = os.path.join(
         output_dir, artist_album_str + '.zip')
-    zf = ZipFile(outfilename, 'w')
-    for root, dirs, files in os.walk(album_path.strip()):
-        for filename in files:
-            song_path = os.path.join(root, filename)
-            zip_output_path = os.path.join(artist_album_str,
-                                           os.path.basename(song_path))
-            zf.write(song_path, arcname=zip_output_path)
-    zf.close()
+    if not os.path.exists(outfilename):
+        os.makedirs(output_dir, exist_ok=True)
+        zf = ZipFile(outfilename, 'w')
+        for root, dirs, files in os.walk(album_path.strip()):
+            for filename in files:
+                song_path = os.path.join(root, filename)
+                zip_output_path = os.path.join(artist_album_str,
+                                               os.path.basename(song_path))
+                zf.write(song_path, arcname=zip_output_path)
+        zf.close()
+    assert os.path.exists(outfilename)
     return outfilename
 
 
@@ -230,7 +230,6 @@ def main():
         outfname = thefreezer.zip_album(args.album_to_zip)
         # -o forces overwrite lol
         subprocess.run(["unzip", "-qq", "-o", outfname, "-d", FREEZER_TMP_DIR])
-        import pdb; pdb.set_trace()
         filelist = sorted(glob.glob(outfname[:-4] + "/*.mp3"))
         for f in filelist:
             print(os.path.basename(f))
