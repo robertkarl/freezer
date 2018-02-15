@@ -28,7 +28,7 @@ from freezerdb import FreezerDB
 FREEZER_DIR = os.path.expanduser("~/.freezer")
 FREEZER_PATHS_FILENAME = os.path.join(FREEZER_DIR, "paths.txt")
 FREEZER_INDEX_PATH = os.path.join(FREEZER_DIR, "index.txt")
-
+FREEZER_TMP_DIR = "/tmp/freezer"
 
 def init_workspace():
     os.makedirs(FREEZER_DIR, exist_ok=True)
@@ -129,6 +129,12 @@ def remote_search(query, host):
 
 
 def zip_album(query):
+    """ Retrieve an album based on query then write matching songs into a zip file.
+    Stores the zip file in FREEZER_TMP_DIR and returns the filename.
+
+    # TODO: fix the network zip file functionality (this function used to return the bytes)
+    """
+    assert type(query) is str
     db = FreezerDB()
     album_path = None
     album_name = None
@@ -141,20 +147,20 @@ def zip_album(query):
             break
     if album_path is None:
         raise RuntimeError()
-    output_dir = "/tmp/freezer"
+    output_dir = FREEZER_TMP_DIR
     os.makedirs(output_dir, exist_ok=True)
+    artist_album_str = "{} - {}".format(artist_name, album_name)
     outfilename = os.path.join(
-        output_dir, "{} - {}".format(artist_name, album_name) + '.zip')
+        output_dir, artist_album_str + '.zip')
     zf = ZipFile(outfilename, 'w')
     for root, dirs, files in os.walk(album_path.strip()):
         for filename in files:
             song_path = os.path.join(root, filename)
-            zip_output_path = os.path.join(album_name,
+            zip_output_path = os.path.join(artist_album_str,
                                            os.path.basename(song_path))
             zf.write(song_path, arcname=zip_output_path)
     zf.close()
-    with open(outfilename, 'rb') as zipbytes:
-        return (album_name, zipbytes.read())
+    return outfilename
 
 
 def get_args():
@@ -221,17 +227,13 @@ def main():
         outf.write(zipbytes)
         print(outpath)
     elif args.command == "play":
-        album_name, zipbytes = thefreezer.zip_album(args.album_to_zip)
-        outfname = os.path.join(os.getcwd(), album_name + ".zip")
-        with open(outfname, 'wb') as outf:
-            outf.write(zipbytes)
-            outf.flush()
-            os.fsync(outf)
+        outfname = thefreezer.zip_album(args.album_to_zip)
         # -o forces overwrite lol
-        subprocess.run(["unzip", "-o", outfname])
-        filelist = sorted(glob.glob(album_name + "/*.mp3"))
+        subprocess.run(["unzip", "-qq", "-o", outfname, "-d", FREEZER_TMP_DIR])
+        import pdb; pdb.set_trace()
+        filelist = sorted(glob.glob(outfname[:-4] + "/*.mp3"))
         for f in filelist:
-            print(f)
+            print(os.path.basename(f))
         media_list = vlc.MediaList(filelist)
         player = vlc.MediaListPlayer()
         player.set_media_list(media_list)
