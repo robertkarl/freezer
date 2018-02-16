@@ -12,6 +12,7 @@ import argparse
 import glob
 import os
 import pdb
+import random
 import sqlite3
 import subprocess
 import time
@@ -176,8 +177,32 @@ def get_args():
     zip_parser = subparsers.add_parser('play')
     zip_parser.add_argument("album_to_zip")
 
+    zip_parser = subparsers.add_parser('play_random_album')
+
     return parser
 
+def play_album(thefreezer, args):
+    outfname = thefreezer.zip_album(args.album_to_zip)
+    # -o forces overwrite lol
+    subprocess.run(["unzip", "-qq", "-o", outfname, "-d", FREEZER_TMP_DIR])
+    filelist = sorted(glob.glob(outfname[:-4] + "/*.mp3"))
+    print(os.path.basename(outfname)[:-4])
+    for f in filelist:
+        print(os.path.basename(f))
+    media_list = vlc.MediaList(filelist)
+    player = vlc.MediaListPlayer()
+    player.set_media_list(media_list)
+    player.play()
+    # Dump user into a PDB session. Songs can be controlled from there in
+    # lieu of a real interface of some kind.
+    import pdb
+    pdb.set_trace()
+
+def play_random_album(db, thefreezer, args):
+    album = random.choice(db.read_albums())
+    pdb.set_trace()
+    args.album_to_zip = album[0]
+    play_album(thefreezer, args)
 
 def main():
     parser = get_args()
@@ -208,20 +233,9 @@ def main():
         outf.write(zipbytes)
         print(outpath)
     elif args.command == "play":
-        outfname = thefreezer.zip_album(args.album_to_zip)
-        # -o forces overwrite lol
-        subprocess.run(["unzip", "-qq", "-o", outfname, "-d", FREEZER_TMP_DIR])
-        filelist = sorted(glob.glob(outfname[:-4] + "/*.mp3"))
-        for f in filelist:
-            print(os.path.basename(f))
-        media_list = vlc.MediaList(filelist)
-        player = vlc.MediaListPlayer()
-        player.set_media_list(media_list)
-        player.play()
-        # Dump user into a PDB session. Songs can be controlled from there in
-        # lieu of a real interface of some kind.
-        import pdb
-        pdb.set_trace()
+        play_album(thefreezer, args)
+    elif args.command == "play_random_album":
+        play_random_album(db, thefreezer, args)
     elif args.command == "add":
         add_indexed_path(args.filenames)
     elif args.command == "play":
