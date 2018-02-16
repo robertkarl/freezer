@@ -191,8 +191,6 @@ def get_args():
     zip_parser = subparsers.add_parser('play')
     zip_parser.add_argument("album_to_zip")
 
-    parser.add_argument(
-        "--freezer_host", type=str, default='http://localhost:8000')
     return parser
 
 
