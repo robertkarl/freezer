@@ -30,6 +30,7 @@ FREEZER_PATHS_FILENAME = os.path.join(FREEZER_DIR, "paths.txt")
 FREEZER_INDEX_PATH = os.path.join(FREEZER_DIR, "index.txt")
 FREEZER_TMP_DIR = "/tmp/freezer"
 
+
 def init_workspace():
     os.makedirs(FREEZER_DIR, exist_ok=True)
     db = freezerdb.FreezerDB()
@@ -90,6 +91,7 @@ class FreezerInstance(object):
             return self.proxy.zip_album(query)
         return zip_album(query)
 
+
 def get_proxy(addr):
     proxy = xmlrpc.client.ServerProxy(addr)
     return proxy
@@ -134,8 +136,7 @@ def zip_album(query):
             break
     output_dir = FREEZER_TMP_DIR
     artist_album_str = "{} - {}".format(artist_name, album_name)
-    outfilename = os.path.join(
-        output_dir, artist_album_str + '.zip')
+    outfilename = os.path.join(output_dir, artist_album_str + '.zip')
     if not os.path.exists(outfilename):
         os.makedirs(output_dir, exist_ok=True)
         zf = ZipFile(outfilename, 'w')
@@ -183,6 +184,7 @@ def get_args():
 
     return parser
 
+
 def play_album(thefreezer, args):
     outfname, _ = thefreezer.zip_album(args.album_to_zip)
     # -o forces overwrite lol
@@ -200,11 +202,12 @@ def play_album(thefreezer, args):
     import pdb
     pdb.set_trace()
 
+
 def play_random_album(db, thefreezer, args):
     album = random.choice(db.read_albums())
-    pdb.set_trace()
     args.album_to_zip = album[0]
     play_album(thefreezer, args)
+
 
 def main():
     parser = get_args()
@@ -231,7 +234,6 @@ def main():
     elif args.command == "archive":
         # In a remote freezer situation, "album_name" is actually the remote file path
         outpath, zipbytes = thefreezer.zip_album(args.album_to_zip)
-        #import pdb; pdb.set_trace()
         outf = open(outpath, 'wb')
         outf.write(zipbytes.data)
         print(outpath)
@@ -252,4 +254,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

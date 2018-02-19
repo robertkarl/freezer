@@ -10,13 +10,15 @@ from zeroconf import ServiceBrowser, ServiceStateChange, Zeroconf
 
 
 def on_service_state_change(zeroconf, service_type, name, state_change):
-    print("Service %s of type %s state changed: %s" % (name, service_type, state_change))
+    print("Service %s of type %s state changed: %s" % (name, service_type,
+                                                       state_change))
 
     if state_change is ServiceStateChange.Added:
         info = zeroconf.get_service_info(service_type, name)
         # connect to the server
         if info and name.count("freezer"):
-            addrstr = "http://{}:{}".format(socket.inet_ntoa(info.address), info.port)
+            addrstr = "http://{}:{}".format(
+                socket.inet_ntoa(info.address), info.port)
             print("attempting to connect to xmlprc at {}".format(addrstr))
             a = xmlrpc.client.ServerProxy(addrstr)
             print(a.read_albums())
@@ -31,7 +33,8 @@ if __name__ == '__main__':
 
     zeroconf = Zeroconf()
     print("\nBrowsing services, press Ctrl-C to exit...\n")
-    browser = ServiceBrowser(zeroconf, "_http._tcp.local.", handlers=[on_service_state_change])
+    browser = ServiceBrowser(
+        zeroconf, "_http._tcp.local.", handlers=[on_service_state_change])
 
     try:
         while True:

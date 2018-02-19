@@ -25,9 +25,10 @@ class FreezerServer(object):
 
     def register_zeroconf(self):
         desc = {}
-        self.info = ServiceInfo(
-            "_http._tcp.local.", "freezer._http._tcp.local.",
-            socket.inet_aton(getmyip()), self.port, 0, 0, desc, "somehost.local.")
+        self.info = ServiceInfo("_http._tcp.local.",
+                                "freezer._http._tcp.local.",
+                                socket.inet_aton(getmyip()), self.port, 0, 0,
+                                desc, "somehost.local.")
         self.zc = Zeroconf()
         print("calling register_service")
         self.zc.register_service(self.info)
@@ -58,8 +59,6 @@ class FreezerServer(object):
         self.zc.close()
 
 
- 
 if __name__ == "__main__":
     s = FreezerServer()
     s.serve_forever()
-
