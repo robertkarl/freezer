@@ -147,7 +147,9 @@ def zip_album(query):
                 zf.write(song_path, arcname=zip_output_path)
         zf.close()
     assert os.path.exists(outfilename)
-    return outfilename
+    print("outfilename  is {}".format(outfilename))
+    with open(outfilename, 'rb') as zipbytes:
+        return (outfilename, zipbytes.read())
 
 
 def get_args():
@@ -182,7 +184,7 @@ def get_args():
     return parser
 
 def play_album(thefreezer, args):
-    outfname = thefreezer.zip_album(args.album_to_zip)
+    outfname, _ = thefreezer.zip_album(args.album_to_zip)
     # -o forces overwrite lol
     subprocess.run(["unzip", "-qq", "-o", outfname, "-d", FREEZER_TMP_DIR])
     filelist = sorted(glob.glob(outfname[:-4] + "/*.mp3"))
@@ -227,10 +229,11 @@ def main():
         else:
             parser.print_usage()
     elif args.command == "archive":
-        album_name, zipbytes = thefreezer.zip_album(args.album_to_zip)
-        outpath = os.path.join(os.getcwd(), album_name + ".zip")
+        # In a remote freezer situation, "album_name" is actually the remote file path
+        outpath, zipbytes = thefreezer.zip_album(args.album_to_zip)
+        #import pdb; pdb.set_trace()
         outf = open(outpath, 'wb')
-        outf.write(zipbytes)
+        outf.write(zipbytes.data)
         print(outpath)
     elif args.command == "play":
         play_album(thefreezer, args)

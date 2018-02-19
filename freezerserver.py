@@ -18,8 +18,6 @@ def getmyip():
     s.close()
     return ans
 
-def bogus():
-    return 18
 
 class FreezerServer(object):
     def __init__(self):
@@ -44,7 +42,6 @@ class FreezerServer(object):
         server.register_function(db.read_all, "read_all")
         server.register_function(db.read_albums, "read_albums")
         server.register_function(frzr.zip_album)
-        server.register_function(bogus)
         server.register_function(frzr.search, name="search")
         server.serve_forever()
         try:
