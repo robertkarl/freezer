@@ -57,14 +57,19 @@ def add_indexed_path(paths):
 
 def get_freezer_indexed_paths():
     with open(FREEZER_PATHS_FILENAME, 'r') as freezer_paths_file:
-        import pdb; pdb.set_trace()
         lines = freezer_paths_file.readlines()
     return [i.strip() for i in lines]
 
 
 def save_scan_results(scanresult):
     if os.path.exists(freezerdb.FREEZER_DB):
-        os.remove(freezerdb.FREEZER_DB)
+        print("remove existing db at {}? [y/n] default is no".format(freezerdb.FREEZER_DB))
+        i = input()
+        if i == 'y':
+            os.remove(freezerdb.FREEZER_DB)
+        else:
+            print("aborting scan")
+            return
     init_workspace()
     db = freezerdb.FreezerDB()
     results = sorted(scanresult, key=lambda s: s[0].lower())
@@ -221,7 +226,7 @@ def main():
         save_scan_results(result)
     elif args.command == "show":
         if args.what_to_show == "all":
-            for i in db.index_generator():
+            for i in db.read_all():
                 print("{:33}{:43}{}".format(i[0], i[1], i[2]))
         elif args.what_to_show == "albums":
             for i in db.read_albums():
@@ -241,7 +246,7 @@ def main():
         play_album(thefreezer, args)
     elif args.command == "play_random_album":
         play_random_album(db, thefreezer, args)
-    elif args.command == "add":
+    elif args.command == "search_path":
         add_indexed_path(args.filenames)
     elif args.command == "play":
         add_indexed_path(args.filenames)

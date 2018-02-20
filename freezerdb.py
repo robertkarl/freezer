@@ -27,9 +27,7 @@ class FreezerDB(object):
     def run_query(self, *query_str):
         c = self.conn.cursor()
         ans = []
-        for row in c.execute(*query_str):
-            ans.append(row)
-        return ans
+        return c.execute(*query_str)
 
     def read_artists(self):
         return self.run_query("select distinct artist from album")
@@ -43,5 +41,3 @@ class FreezerDB(object):
         return self.run_query(
             "select * from album order by artist COLLATE NOCASE")
 
-    def index_generator(self):
-        return self.run_query("select * from album")
