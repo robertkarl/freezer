@@ -56,8 +56,8 @@ def add_indexed_path(paths):
 
 
 def get_freezer_indexed_paths():
-    with open(os.path.join(FREEZER_DIR, FREEZER_PATHS_FILENAME),
-              'r') as freezer_paths_file:
+    with open(FREEZER_PATHS_FILENAME, 'r') as freezer_paths_file:
+        import pdb; pdb.set_trace()
         lines = freezer_paths_file.readlines()
     return [i.strip() for i in lines]
 
