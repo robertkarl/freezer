@@ -197,18 +197,20 @@ class loop_handler:
         self.player = player
         theplayer = self.player.get_media_player
         self.looper = Looper(self)
-        import pdb
-        pdb.set_trace()
 
     def handle(self, s):
         if s == ' ':
             if self.player.is_playing:
+                print('pause')
                 self.player.pause()
             else:
+                print('play')
                 self.player.play()
         elif s == 'n':
+            print('next')
             self.player.next()
         elif s == 'p':
+            print('previous')
             self.player.previous()
         elif s == '?':
             print(self.player)
@@ -227,8 +229,6 @@ def play_album(thefreezer, args):
         print(os.path.basename(f))
     media_list = vlc.MediaList(filelist)
     player = vlc.MediaListPlayer()
-    import pdb
-    pdb.set_trace()
     player.set_media_list(media_list)
     player.play()
     # Dump user into a PDB session. Songs can be controlled from there in
