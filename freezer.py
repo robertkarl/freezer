@@ -18,13 +18,13 @@ import subprocess
 import time
 import xmlrpc.client
 from zipfile import ZipFile
-from loop import Looper
 
 import vlc
 
 import freezerdb
 import scan
 from freezerdb import FreezerDB
+from loop import Looper
 
 FREEZER_DIR = os.path.expanduser("~/.freezer")
 FREEZER_PATHS_FILENAME = os.path.join(FREEZER_DIR, "paths.txt")
@@ -124,6 +124,10 @@ def remote_search(query, host):
     return a.search(query)
 
 
+def replace_bad_chars(somestr):
+    return somestr.replace(":", "_")
+
+
 def zip_album(query):
     """ Retrieve an album based on query then write matching songs into a zip file.
     Stores the zip file in FREEZER_TMP_DIR and returns the filename.
@@ -142,6 +146,8 @@ def zip_album(query):
             artist_name = album_tuple[0]
             break
     output_dir = FREEZER_TMP_DIR
+    arist_name = replace_bad_chars(artist_name)
+    album_name = replace_bad_chars(album_name)
     artist_album_str = "{} - {}".format(artist_name, album_name)
     outfilename = os.path.join(output_dir, artist_album_str + '.zip')
     if not os.path.exists(outfilename):
@@ -152,6 +158,7 @@ def zip_album(query):
                 song_path = os.path.join(root, filename)
                 zip_output_path = os.path.join(artist_album_str,
                                                os.path.basename(song_path))
+                zip_output_path.replace(":", "_")
                 zf.write(song_path, arcname=zip_output_path)
         zf.close()
     assert os.path.exists(outfilename)
@@ -185,7 +192,7 @@ def get_args():
     zip_parser.add_argument("album_to_zip")
 
     zip_parser = subparsers.add_parser('play')
-    zip_parser.add_argument("album")
+    zip_parser.add_argument("album_to_zip")
 
     subparsers.add_parser('play_random_album')
 
