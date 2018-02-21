@@ -1,11 +1,10 @@
 import unittest
-from unittest.mock import MagicMock
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
+
 import freezerdb
 
 
 class TestFreezerDB(unittest.TestCase):
-
     def setUp(self):
         self.fake_conn = MagicMock()
         self.db = freezerdb.FreezerDB(self.fake_conn)
@@ -14,7 +13,9 @@ class TestFreezerDB(unittest.TestCase):
         self.db.init_db()
         self.assertTrue(self.fake_conn.cursor.called)
         c = self.fake_conn.cursor()
-        self.assertTrue(c.execute.called_once_with(freezerdb.FreezerDB.ALBUM_CREATE_QUERY))
+        self.assertTrue(
+            c.execute.called_once_with(freezerdb.FreezerDB.ALBUM_CREATE_QUERY))
+
 
 if __name__ == '__main__':
     unittest.main()

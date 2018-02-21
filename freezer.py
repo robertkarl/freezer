@@ -18,11 +18,12 @@ import subprocess
 import time
 import xmlrpc.client
 from zipfile import ZipFile
+from loop import Looper
 
 import vlc
 
-import scan
 import freezerdb
+import scan
 from freezerdb import FreezerDB
 
 FREEZER_DIR = os.path.expanduser("~/.freezer")
@@ -63,7 +64,8 @@ def get_freezer_indexed_paths():
 
 def save_scan_results(scanresult):
     if os.path.exists(freezerdb.FREEZER_DB):
-        print("remove existing db at {}? [y/n] default is no".format(freezerdb.FREEZER_DB))
+        print("remove existing db at {}? [y/n] default is no".format(
+            freezerdb.FREEZER_DB))
         i = input()
         if i == 'y':
             os.remove(freezerdb.FREEZER_DB)
@@ -183,11 +185,36 @@ def get_args():
     zip_parser.add_argument("album_to_zip")
 
     zip_parser = subparsers.add_parser('play')
-    zip_parser.add_argument("album_to_zip")
+    zip_parser.add_argument("album")
 
-    zip_parser = subparsers.add_parser('play_random_album')
+    subparsers.add_parser('play_random_album')
 
     return parser
+
+
+class loop_handler:
+    def __init__(self, player):
+        self.player = player
+        theplayer = self.player.get_media_player
+        self.looper = Looper(self)
+        import pdb
+        pdb.set_trace()
+
+    def handle(self, s):
+        if s == ' ':
+            if self.player.is_playing:
+                self.player.pause()
+            else:
+                self.player.play()
+        elif s == 'n':
+            self.player.next()
+        elif s == 'p':
+            self.player.previous()
+        elif s == '?':
+            print(self.player)
+
+    def go(self):
+        self.looper.go()
 
 
 def play_album(thefreezer, args):
@@ -200,16 +227,19 @@ def play_album(thefreezer, args):
         print(os.path.basename(f))
     media_list = vlc.MediaList(filelist)
     player = vlc.MediaListPlayer()
+    import pdb
+    pdb.set_trace()
     player.set_media_list(media_list)
     player.play()
     # Dump user into a PDB session. Songs can be controlled from there in
     # lieu of a real interface of some kind.
-    import pdb
-    pdb.set_trace()
+    l = loop_handler(player)
+    l.go()
 
 
 def play_random_album(db, thefreezer, args):
-    album = random.choice(db.read_albums())
+    albums = [i for i in db.read_albums()]
+    album = random.choice(albums)
     args.album_to_zip = album[0]
     play_album(thefreezer, args)
 

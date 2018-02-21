@@ -3,8 +3,8 @@
 import logging
 import socket
 import sys
-from time import sleep
 import xmlrpc.client
+from time import sleep
 
 from zeroconf import ServiceBrowser, ServiceStateChange, Zeroconf
 

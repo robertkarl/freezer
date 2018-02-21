@@ -12,7 +12,7 @@ class FreezerDB(object):
     def __init__(self, connection=None):
         self.conn = connection
         if connection is None:
-             self.conn = sqlite3.connect(FREEZER_DB)
+            self.conn = sqlite3.connect(FREEZER_DB)
 
     def init_db(self):
         c = self.conn.cursor()
@@ -40,4 +40,3 @@ class FreezerDB(object):
     def read_all(self):
         return self.run_query(
             "select * from album order by artist COLLATE NOCASE")
-
