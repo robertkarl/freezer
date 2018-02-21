@@ -23,7 +23,6 @@ import vlc
 
 import freezerdb
 import scan
-from freezerdb import FreezerDB
 from loop import Looper
 
 FREEZER_DIR = os.path.expanduser("~/.freezer")
@@ -135,7 +134,7 @@ def zip_album(query):
     # TODO: fix the network zip file functionality (this function used to return the bytes)
     """
     assert type(query) is str
-    db = FreezerDB()
+    db = freezerdb.FreezerDB()
     album_path = None
     album_name = None
     artist_name = None
@@ -255,7 +254,7 @@ def main():
     parser = get_args()
     args = parser.parse_args()
     thefreezer = FreezerInstance(args.remote_host)
-    db = FreezerDB()
+    db = freezerdb.FreezerDB()
     if args.command == "init":
         init_workspace()
     elif args.command == "scan":
